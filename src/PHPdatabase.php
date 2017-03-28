@@ -30,7 +30,11 @@ class PHPdatabase implements InterfacePHPdatabase{
 			$func = function($matches){
 			    var_dump($matches);
 			    
-			    if( empty(@$matches) ) return @matches[0];
+			    if( empty(@$matches[1]) ) return $matches[0];
+
+			    $match = $matches[1];
+			    return  is_numeric($match) ? '['.$match.']' : '[\''.$match.'\']'; 
+
 			};
 			preg_replace_callback(['~([^\[\]]+)(?:\[)~'], $func, 'contnet[a]');
 

@@ -1,6 +1,6 @@
 {
-    "name":              "darkziul/phpdatabase",
-    "description":       "A generic alternative database in php",
+    "name":              "darkziul/phpdb",
+    "description":       "A generic database in php",
     "type":              "library",
     "license":           "MIT",
     "keywords":          [
@@ -8,7 +8,7 @@
         "storage",
         "data"
     ],
-    "homepage": "https://github.com/darkziul/PHPdatabase",
+    "homepage": "https://github.com/darkziul/phpDB",
     "authors":           [
         {
             "name":     "Luiz Carlos Wagner",
@@ -16,10 +16,6 @@
             "homepage": "https://github.com/darkziul"
         }
     ],
-    "repositories":      {
-        "type": "git",
-        "url": "https://github.com/darkziul/PHPdatabase.git"
-    },
     "require":           {
         "php":                      ">=5.3"
     },
@@ -28,7 +24,7 @@
     },
     "autoload":          {
         "psr-4":                 {
-            "darkziul\\PHPdatabase\\": "src"
+            "darkziul\\": "src/"
         }
     }
 }

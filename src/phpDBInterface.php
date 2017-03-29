@@ -1,14 +1,14 @@
 <?php
  
- namespace darkziul\PHPdatabase;
+namespace darkziul;
 
 /**
- * PHPdatabase interface
+ * phpDB Interface
  * @author Luiz Carlos Wagner
  * @license MIT
  **/
 
- interface PHPdatabaseInterface{
+ interface phpDBInterface{
 
  	public function add();
  	public function attach();
@@ -27,8 +27,4 @@
 
 
 
- 	private function 
-
-
-
- }//END interface PHPdatabaseInterface
+ }//END interface

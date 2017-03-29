@@ -14,10 +14,10 @@
 spl_autoload_register(function ($class) {
 
     // project-specific namespace prefix
-    $prefix = 'Foo\\Bar\\';
+    $prefix = 'darkziul\\';
 
     // base directory for the namespace prefix
-    $base_dir = __DIR__ . '/src/';
+    $base_dir = __DIR__ . '/../src/';
 
     // does the class use the namespace prefix?
     $len = strlen($prefix);
@@ -34,6 +34,8 @@ spl_autoload_register(function ($class) {
     // with .php
     $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
 
+
+    // var_dump($file); //test
     // if the file exists, require it
     if (file_exists($file)) {
         require $file;

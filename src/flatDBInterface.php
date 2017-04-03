@@ -3,12 +3,12 @@
 namespace darkziul;
 
 /**
- * phpDB Interface
+ * flat DB Interface
  * @author Luiz Carlos Wagner
  * @license MIT
  **/
 
- interface phpDBInterface{
+ interface flatDBInterface{
 
  	public function add();
  	public function attach();

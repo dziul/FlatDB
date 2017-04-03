@@ -1,14 +1,18 @@
 <?php
  
-namespace darkziul;
+namespace darkziul\Helpers;
 
 /**
  * acess Array Element
  * @author Luiz Carlos Wagner
  * @license MIT
  **/
+class accessArrayException extends \Exception{}
 
- class acessArrayElement{
+class accessArrayElement
+{
+
+	public function __construct(){}
 
  	/**
  	 * @var string
@@ -18,7 +22,7 @@ namespace darkziul;
 
 
 	//squareBracket = colchete
-	public function bracket( $strSquareBracket )
+	public function bracket($strSquareBracket)
 	{
 
 			
@@ -65,7 +69,7 @@ namespace darkziul;
 
 	}
 
-	private function arrayElementMultidimencional(array $array, $keys, $mode='get', $value='', $doneRecursive=false  )
+	private function arrayElementMultidimencional(array $array, $keys, $mode = 'get', $value = '', $doneRecursive = false)
 	{
 		/**
 		 * 
@@ -116,41 +120,9 @@ namespace darkziul;
 
 		return $array;
 	}
-
-	//access array Element via dot notation
-	// public function accessArrayElement( $index, array $array)
-	// {
-	// 	return $this->getArrayElement(explode(self::$delimiter, $index), $array);
-	// }
-
-	// public function accessArrayElement( array $array, $index)
-	// {
-
-	// 	$index = explode(self::$delimiter, $index);
-
-	// 	var_dump($index);
-
-	// 	// return $this->getArrayElement($array, $index);
-	// 	return $this->getArrayElementRecursive($array, $index);
-	// }
-
-	// private function getArrayElement(array $array, array $keys)
-	// {
-	// 	foreach ($keys as $key)
-	// 	{
-	// 		if( !is_array($array) || !isset($array[$key]) ) return null;
-	// 		$array = $array[$key]; 	
-	// 	}
-	// 	return $array;
-	// }
-
-	
-
 	private function callUserFuncAcessArray()
 	{
 		call_user_func_array($func, $paramArr);
 	}
 
  }//END class
-
- class acessArrayException extends \Exception{}

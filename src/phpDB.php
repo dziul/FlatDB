@@ -4,7 +4,7 @@ namespace darkziul;
 
 /**
  * PHPdatabase
- * @package phpDB
+ * @package phpDBInterface, acessArrayElement
  * @category Library
  * @author Luiz Carlos Wagner 
  * @link [repository](https://github.com/darkziul/phpDB)
@@ -12,7 +12,7 @@ namespace darkziul;
  * @license MIT
  * 
  **/
-class phpDB implements phpDBInterface{
+class phpDB extends acessArrayElement implements phpDBInterface{
 
 	public function __construct()
 	{
@@ -40,32 +40,8 @@ class phpDB implements phpDBInterface{
 
 
 
- 	//squareBracket = colchete
-	public function squareBracket( $strSquareBracket )
-	{
-
-			
-
-			$func = function($matches){
-			    // var_dump($matches);//debug
-			    
-			    if( empty(@$matches[1]) ) return $matches[0];
-
-			    $match = $matches[1];
-			    return  is_numeric($match) ? '['.$match.']' : '[\''.$match.'\']'; 
-
-			};
-			return preg_replace_callback(['~([^\[\]]+)(?=\[)~', '~(?:\[)([^\[\](\[\')]+)(?:\])~'], $func, $strSquareBracket);
-
-	}
-
-	//access array Element
-	public function accessArray( $strSquareBracket, $array)
-	{
-		$squreBracket = $this->squareBracket($strSquareBracket);
-
-		return eval("return \$array$squreBracket;");
-	}
+ 	
 
 
 }//END class PHPdatabase
+

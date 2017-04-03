@@ -7,12 +7,17 @@ use darkziul\phpDB as phpDB;
 
 
 $arr = [
-			'a'=>	[
-				'b'=>['test','145.5m']
-					]
+			'ok'=>[
+				1=>['test'=>2],
+				2=>['test'=>25454],
+				3=>['test'=>5]
+			]
 		];
 
 
 $db = new phpDB();
 
-var_dump( $db->accessArray('a[b]', $arr) );
+// var_dump($db->bracket('[b][?][link]'));
+var_dump( $db->getArrayElement($arr, '[ok][?][test]') ); //get
+
+// var_dump($arr[1]);

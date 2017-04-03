@@ -14,11 +14,11 @@ namespace darkziul;
 	/**
 	 * @var number
 	 */
-	private $id = 0;
+	public $id = 0;
 	/**
 	 * @var string
 	 */
-	private $table;
+	public $table;
 	/**
 	 * @var bool
 	 */
@@ -26,7 +26,10 @@ namespace darkziul;
 	/**
 	 * @var array
 	 */
-	private $order = ['key'=>'id', 'order'=>'desc'];
+	public $order = ['key'=>'id', 'order'=>'desc'];
+
+
+	
 
 	public function __construct($name)
 	{

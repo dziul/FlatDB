@@ -14,6 +14,12 @@ namespace darkziul\Helpers;
  	public function __construct(){}
 
 
+ 	public function isDir($dir)
+ 	{
+ 		return is_dir($dir);
+ 	}
+
+
 	/**
 	 * Avaliar e Criar o Diretorio
 	 * @param string $dir diretorio a ser analizado e criado
@@ -21,24 +27,23 @@ namespace darkziul\Helpers;
 	 * @param number $mode permissão do arquivo, padrão: 07777
 	 * @return bool
 	 */
-	private function create($dir, $recursive=false, $mode=0777)
+	public function create($dir, $recursive=false, $mode=0777)
 	{
-		if( is_dir($dir) ) return true; // Caso $dir for diretorio | Case $dir for directory
+		if( $this->isDir($dir) ) return true; // Caso $dir for diretorio | Case $dir for directory
 
+        $dirParent = dirname($dir); // dir parent
+        
+        $return = null; //default
+        if($recursive) $return =  $this->set($dirParent, $recursive, $mode); //ativar o modo recursivo de criação
 
-            $dirParent = dirname($dir); // dir parent
-            
-            $return = null; //default
-            if($recursive) $return =  $this->set($dirParent, $recursive, $mode); //ativar o modo recursivo de criação
+        if(!$recursive  &&  is_writable($dirParent) || $return && is_writable($dirParent))
+        {
 
-            if(!$recursive  &&  is_writable($parentPath) || $return && is_writable($parentPath))
-            {
+                mkdir($dir);
+                return chmod($dir, $mode);
+        }
 
-                    mkdir($dir);
-                    return chmod($dir, $mode);
-            }
-
-            return false;
+        return false;
 	}
 
 }

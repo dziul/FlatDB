@@ -5,9 +5,9 @@ require 'autoload.php';
 use darkziul\flatDB as flatDB;
 
 
-$db = new flatDB();
-
-
+$db = new flatDB('default', 'data');
+$dbDefault = $db->table('offer');
+var_dump( $dbDefault->metadata() );
 
 // $arr = [
 // 			'ok'=>[

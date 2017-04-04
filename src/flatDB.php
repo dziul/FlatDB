@@ -6,8 +6,22 @@ use darkziul\Helpers\accessArrayElement;
 use darkziul\Helpers\directory;
 use \Exception as Exception;
 
+// $D = new($dirDB);
+// $D->db('dbFF') //
+
 class flatDB
 {
+	/**
+	 * @var obj
+	 */
+	private $query;
+
+	/**
+	 * Saber se o DB foi ativo /oou em uso
+	 * @var bool
+	 */
+	private $hasDB = false;
+
 	/**
 	 * @var string
 	 */
@@ -43,7 +57,7 @@ class flatDB
 	/**
 	 * @var string
 	 */
-	private $dbBaseDir;
+	private $dbBasePath;
 
 	/**
 	 * Nome do DB padrão 
@@ -54,14 +68,14 @@ class flatDB
 
 	/**
 	 * construtor
-	 * @param string|null $dbDir  caminho do diretiro
+	 * @param string|null $dbPath  caminho do diretiro
 	 * @return type
 	 */
-	public function __construct($dbDir = null) {
+	public function __construct($dbPath = null) {
 
 		$this->directoryInstance = new directory();
 
-		$this->dbBaseDir = empty($dbDir) ? $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/_data_flatDB/' : $dbDir;
+		$this->dbBasePath = empty($dbPath) ? $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/_data_flatDB/' : $dbPath;
 		$this->strlenDenyAccess = strlen($this->strDenyAccess); //calcular o tamanho da string
 	}
 
@@ -72,9 +86,10 @@ class flatDB
 	 * @param string $dbName 
 	 * @return string  caminho construído
 	 */
-	private function setDirDataBase(string $dbName, $dbPath=null)
+	private function getDbPath($dbName, $dbPath=null)
 	{
-		if (empty($dbPath)) return $this->dbBaseDir . $dbName .'/'; //Folder default
+		if (empty($dbName)) $dbName = $this->dbNameDefault;
+		if (empty($dbPath)) return $this->dbBasePath . $dbName .'/'; //Folder default
 		else  return $dbPath . '/' .$dbName. '/';
 	}
 
@@ -82,9 +97,9 @@ class flatDB
 
 	public function db($dbName = null)
 	{
-		if (empty($dbName)) $dbName = $this->dbNameDefault;
-		$this->dbFolder = $this->setDirDataBase($dbName);
-
+		if (!$this->dbExists($dbName)) throw new Exception(sprintf('Nao existe a tabela "%s".', $dbName));
+		$this->hasDB = true;//saber se o DB esta sendo usado	
+		// $this->who = 'db'; //indentificar para utilizar no encadeamento
 		//Encadeamento | chaining
 		return $this;
 	}
@@ -95,49 +110,42 @@ class flatDB
 	 */
 	public function dbCreate($dbName = null)
 	{
-		if (empty($dbName)) $dbName = $this->dbNameDefault;
-
-		$dbDir = $this->setDirDataBase($dbName);
-		
-
-		if( !$this->directoryInstance->create($dbDir) ) throw new Exception(sprintf('Não foi possível crear o diretorio do DB: "%s"!', $dbDir));
-		return file_put_contents($dbDir . 'index.php', $this->strDenyAccess);		
+		$dbPath = $this->getDbPath($dbName);
+		if( !$this->directoryInstance->create($dbPath) ) throw new Exception(sprintf('Não foi possível crear o diretorio do DB: "%s"!', $dbPath));
+		return file_put_contents($dbPath . 'index.php', $this->strDenyAccess);		
 	}
 
 
 	/**
 	 * Deletar DB
 	 * @param string $dbName 
-	 * @param string|null $dbDir caminho do diretorio @example data/example/dir/
+	 * @param string|null $dbPath caminho do diretorio @example data/example/dir/
 	 * @return bool|null  NULL quando $dir não for um diretorio
 	 */
 	public function dbDelete($dbName = null)
 	{
-		if (empty($dbName)) $dbName = $this->dbNameDefault;
-
-		$dir = $this->setDirDataBase($dbName);
-		if (is_dir($dir))	{
-			return $this->directoryInstance->delete($dir);
+		
+		if ($this->dbExists($dbName))	{
+			$dir = $this->getDbPath($dbName);
+			return $this->directoryInstance->delete($this->dbExists($dir));
 		}
 
 		return null;
 	}
 
+
+
 	/**
 	 * Identificar se DB existe
 	 * @param string $dbName 
-	 * @param type|null $dbDir 
+	 * @param type|null $dbPath 
 	 * @return type
 	 */
 	public function dbExists($dbName = null)
 	{
-		if (empty($dbName)) $dbName = $this->dbNameDefault;
-		
-		$dir = $this->setDirDataBase($dbName);
+		$dir = $this->getDbPath($dbName);
 		return is_dir($dir);
 	}
-
-
 
 
 
@@ -148,23 +156,58 @@ class flatDB
 	 */
 	public function table($name)
 	{
-		$this->query = new DBQuery($name);
+		if (!$this->hasDB) throw new Exception('Nao existe DataBase selecionado!');
+
+		// $this->who = 'table';
+		if (!$this->tableExists($name)) throw new Exception(sprintf('Nao existe a tabela %s', $name));
+		
+
+		$this->query = new flatDBtableQuery($name);
+		$this->query->path = $this->getTablePath($name);
+
 		return $this;
 	}
+
+	public function tableCreate($name)
+	{
+
+		$path = $getTablePath($name);
+		if( !$this->directoryInstance->create($path) ) throw new Exception(sprintf('Não foi possível crear o diretorio da Tabela: "%s"!', $path));
+		return file_put_contents($dbPath . 'index.php', $this->strDenyAccess);
+	}
+
 
 	/**
 	 * Saber se existe a tabela
 	 * @param string $name nome da tabela a ser consultada
 	 * @return bool
 	 */
-	public function tableExists(string $name)
+	public function tableExists($name)
 	{
-		return is_dir($this->dbFolder . $name . '/');
+		return is_dir($this->getTablePath($name));
 	}
 
-	public function allTable()
+	/**
+	 * Gerar o diretorio Tabela
+	 * @param string $name  nome da tabela
+	 * @return string CAminho completo da tabela
+	 */
+	private function getTablePath(string $name)
 	{
-		$this->dbFolder
+		return $this->dbFolder . $nome .'/';
+	}
+
+
+	/**
+	 * Pegar todos os nomes das tabelas referente a DB
+	 * @param bool $outJSON TRUE: saida sera em JSON 
+	 * @return array|string
+	 */
+	public function allNameTable($outJSON=false)
+	{
+		$result = $this->directoryInstance->allNameFolders($this->dbFolder); //return array
+		if ($outJSON) return json_encode($result);
+		return $result;
 	}
 
 	/**

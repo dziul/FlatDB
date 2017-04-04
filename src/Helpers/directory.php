@@ -77,7 +77,7 @@ namespace darkziul\Helpers;
 
 
 	/**
-	 * Retorna todas as pastas
+	 * Retorna todas as pastas do Diretorio [Nao as subsPastas]
 	 * @param string $dir caminho do dir  @example data/example/
 	 * @return array  retorna todos os nomes de pasta existente no diretorio setado em $dir  @example $dir:'data/example/'   out: ['entry-1', 'entry-2']
 	 */

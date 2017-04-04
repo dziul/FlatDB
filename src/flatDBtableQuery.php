@@ -8,7 +8,7 @@ namespace darkziul;
  * @license MIT
  **/
 
- class DBQuery
+ class flatDBtableQuery
  {
 
 	

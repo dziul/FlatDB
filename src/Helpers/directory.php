@@ -81,7 +81,7 @@ namespace darkziul\Helpers;
 	 * @param string $dir caminho do dir  @example data/example/
 	 * @return array  retorna todos os nomes de pasta existente no diretorio setado em $dir  @example $dir:'data/example/'   out: ['entry-1', 'entry-2']
 	 */
-	public function allNameFolders(string $dir)
+	public function showFolders(string $dir)
 	{
 		$outArr = [];//init
 		$recursiveDirIte = new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS);

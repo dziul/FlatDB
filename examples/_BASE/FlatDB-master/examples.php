@@ -15,8 +15,6 @@ require_once('flatdb.php');
 // Init main database
 $db = new FlatDB(__DIR__ . '/data');
 
-var_dump( $db->table('products')->meta() );
-
 // Insert an entry to table 'products'
 // If table 'products' is not exist, it will be created on the fly
 // The insert function returns the inserted object, note that it added an 'id' key
@@ -42,23 +40,23 @@ var_dump($data);
 echo '<hr>';
 
 // Update entry with id=1
-$db->table('products')->update(2, array(
-	'name' => 'Cotton Hoodie',
-	'price' => 48.99,
-    'sizes' => array('XS', 'S', 'L')
-));
-$data = $db->table('products')->find(2);
-echo 'First Product has been updated:';
-var_dump($data);
-echo '<hr>';
+// $db->table('products')->update(2, array(
+// 	'name' => 'Cotton Hoodie',
+// 	'price' => 48.99,
+//     'sizes' => array('XS', 'S', 'L')
+// ));
+// $data = $db->table('products')->find(2);
+// echo 'First Product has been updated:';
+// var_dump($data);
+// echo '<hr>';
 
 // Remove entry with id=1
-$db->table('products')->remove([2,3,4]);
+// $db->table('products')->remove([2,3,4]);
 
-$data = $db->table('products')->all();
-echo 'PRODUCTS (First product has been removed):';
-var_dump($data);
-echo '<hr>';
+// $data = $db->table('products')->all();
+// echo 'PRODUCTS (First product has been removed):';
+// var_dump($data);
+// echo '<hr>';
 
 // Get entries with name='Hooded Jacket'
 $data = $db->table('products')->where(array('name' => 'Hooded Jacket'))->all();

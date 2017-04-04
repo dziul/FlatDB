@@ -2,6 +2,7 @@
 
 require 'autoload.php';
 
+use darkziul\Helpers\accessArrayElement as accessArrayElement;
 use darkziul\flatDB as flatDB;
 
 
@@ -10,7 +11,33 @@ use darkziul\flatDB as flatDB;
 // var_dump( $dbDefault->metadata() );
 
 
+$arrY = new accessArrayElement();
 
+$arr =[
+		'link'=>'ok',
+		'attr' => [
+			'css' =>[
+				'black' => '#000'
+			]
+		],
+		'attrT' => [
+			'css' =>[
+				'green' => '###'
+			]
+		],
+		'attrs' => [
+			'css' =>[
+				'red' => '???',
+				'black' => 'ok'
+			]
+		]
+
+];
+
+
+$ok = $arrY->getArrayElement($arr, '[?][css][red]');
+
+var_dump($ok);
 
 // $arr = [
 // 			'ok'=>[
@@ -21,7 +48,7 @@ use darkziul\flatDB as flatDB;
 // 		];
 
 
-// $db = new phpDB();
+// $db = new flatDB();
 
 // // var_dump($db->bracket('[b][?][link]'));
 // var_dump( $db->getArrayElement($arr, '[ok][?][test]') ); //get

@@ -29,7 +29,7 @@
 /*
  * Added extending global Exception so exceptions can be handled inside this namespace
  */
-// class Exception extends \Exception {}
+// class Exception extends Exception {}
 
 class FlatDB
 {
@@ -221,13 +221,22 @@ class FlatDB
 
         // check if an index is modified
         $meta           = $this->meta();
+
+        
+
+
         $old_entry      = $this->read($entry_file, false);
         $update_indexes = false;
         $indexes        = array_keys($meta['indexes']);
+
+
+
         foreach ($indexes as $index) {
             if ($index == 'id') {
                 continue;
             }
+
+            var_dump($old_entry[$index] != $val[$index], $old_entry[$index], $val[$index]);
 
             if ($old_entry[$index] != $val[$index]) {
                 $update_indexes = true;
@@ -253,6 +262,7 @@ class FlatDB
         // id cannot be changed
         $val['id'] = $old_entry['id'];
 
+        var_dump($indexes, $meta['indexes']);
         // persist updated entry
         $this->write($entry_file, $val, false);
 
@@ -348,6 +358,8 @@ class FlatDB
 
         // If we are finding by index, use the table matadata
         $meta = $this->meta();
+
+
 
         if (!array_key_exists($field, $meta['indexes'])) {
             throw new Exception("The field $field is not a table index");

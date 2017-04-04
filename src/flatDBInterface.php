@@ -10,35 +10,38 @@ namespace darkziul;
 
  interface flatDBInterface{
 
- 	public function add();
- 	public function attach();
+ 	public function insert(array $arr, $id=null);
 
- 	public function change();
+ 	public function remove($id);
 
- 	/**
- 	 * 
- 	 * string :: 1  ::  '[product][tv]'  Delete todas as Tvs
- 	 * array :: [1,2]  ::  ['[product][tv]', '[product][pc]']  deleta todas as TVs e PCs
- 	 * mode where :: [1=>value, 2]   ::   ['[product][tv]'=>'samsung', '[product][pc]']  :: deleta todas as TVs Samsung e PCs
- 	 * 
- 	 * */
- 	public function remove();
-
+ 	public function update($id);
 
  	/**
- 	 *  string :: 1 :: '[nome]'
- 	 * array :: [1,2] ['[nome]', '[money]']
- 	 * mode where array :: [1=>value, 2]  ::  ['[nome]'=>'pedro', '[money]']
- 	 * 
- 	 * */
- 	public function find();
+ 	 * Selecionar
+ 	 * @param string|array $id @example (string)'nome' | (array)['nome', 'idade']
+ 	 * @return type
+ 	 */
+ 	public function select($key=null);
+
+ 	/**
+ 	 * Condições | Filtro
+ 	 * @param array $arr 
+ 	 * @return type
+ 	 */
+ 	public function where(array $arr);
 
 
- 	public function save();
+ 	public function execute();
 
- 	public function all();
- 	public function column();
 
+ 	public function offset(number $n);
+
+ 	public function limit(number $n);
+ 	
+
+ 	// public function metaData();
+
+ 	// public function indexes();
 
 
 

@@ -12,7 +12,7 @@ class accessArrayException extends \Exception{}
 class accessArrayElement
 {
 
-	public function __construct(){}
+	// public function __construct(){}
 
  	/**
  	 * @var string
@@ -46,7 +46,6 @@ class accessArrayElement
 
 	public function getArrayElement(array $array, $keys)
 	{
-
 		return $this->arrayElementMultidimencional($array, $this->buildAccessKey($keys), 'get');
 	}
 
@@ -61,15 +60,17 @@ class accessArrayElement
 			if( isset($matches[1]) ) $keys[] = trim($matches[1]);
 			return $matches[0];
 		};
-		preg_replace_callback(['~\[([^\[\](\[\'|\[\")(\'\]|\"\])]*)\]~'], $func, $squareBracket);
+		//get main[key][key] || [main][key][key]
+		//get test | test[test] | [test][test] | ['test']['test']
+		preg_replace_callback(['~^([^\[]+)$~','~^([^\[\]]+)\[~','~\[([^\[\](\[\'|\[\")(\'\]|\"\])]*)\]~'], $func, $squareBracket);
 
 		if( !count($keys) ) throw new Exception("Not build access key");
-		
+		// var_dump($keys);//debug
 		return $keys;
 
 	}
 
-	private function arrayElementMultidimencional(array $array, $keys, $mode = 'get', $value = '', $doneRecursive = false)
+	private function arrayElementMultidimencional(array $array, $keys, $mode = 'get', $value = '', $recursive = false)
 	{
 		/**
 		 * 
@@ -79,15 +80,16 @@ class accessArrayElement
 		 *  unset
 		 * 
 		 **/
-		
 		foreach ($keys as $key)
 		{
 			array_shift($keys);//remove o primeiro
 			$before = $array; // save content array|content
 			
+
+
 			// BEGIN access Multidimencional
 			// $mode :: get
-			if('?' === $key) 
+			if(in_array($key, ['?', '*'])) 
 			{
 				$ownerlessArr = [];//init
 				// $varTEMP = '{{abc@@##%%__TEMP__%%##@@abc}}';
@@ -98,19 +100,20 @@ class accessArrayElement
 					{
 
 						$data = $this->arrayElementMultidimencional($VALUE, $keys, false, false, true);
-						if( $doneRecursive && is_array($data) && isset($data[0]) ) $data = $data[0];
+						if( $recursive && is_array($data) && isset($data[0]) ) $data = $data[0];
 
 						if( !empty($data)  ) $ownerlessArr[] = $data;
 					}  
 
 					// var_dump($ownerlessArr);//debug
 				}
+				// var_dump($ownerlessArr);//debug
 				return $ownerlessArr;
 			}
-			if('set' == $mode && '' == $key)
-			{
-				var_dump($key);
-			}
+			// if('set' == $mode && '' == $key)
+			// {
+			// 	var_dump($key);
+			// }
 			// END access Multidimencional
 
 
@@ -119,7 +122,11 @@ class accessArrayElement
 		}
 
 		return $array;
+
+
 	}
+
+
 	private function callUserFuncAcessArray()
 	{
 		call_user_func_array($func, $paramArr);

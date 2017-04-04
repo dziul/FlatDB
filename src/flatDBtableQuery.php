@@ -17,6 +17,11 @@ namespace darkziul;
 	 */
 	public $table;
 	/**
+	 * Caminho da tabela
+	 * @var string
+	 */
+	public $tablePath;
+	/**
 	 * @var number
 	 */
 	public $id = 0;
@@ -46,8 +51,9 @@ namespace darkziul;
 
 	
 
-	public function __construct($name)
+	public function __construct($name, $path='')
 	{
+		$this->tablePath = $path;
 		$this->table = $name;
 	}
 

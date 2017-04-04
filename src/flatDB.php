@@ -55,6 +55,11 @@ class flatDB
 
 
 	/**
+	 * @var array
+	 */
+	private $metaCache = [];
+
+	/**
 	 * @var string
 	 */
 	private $dbBasePath;
@@ -148,30 +153,42 @@ class flatDB
 	}
 
 
+	public function tableShow($)
+	{
+
+	}
+
+
 
 	/**
 	 * Setar Tabela
 	 * @param string $name  Nome da Tabela
+	 * @param  bool $create TRUE: cria a tabela caso não exista | Create case does not exist
 	 * @return this
 	 */
-	public function table($name)
+	public function table($name, $create=false)
 	{
 		if (!$this->hasDB) throw new Exception('Nao existe DataBase selecionado!');
 
 		// $this->who = 'table';
-		if (!$this->tableExists($name)) throw new Exception(sprintf('Nao existe a tabela %s', $name));
+		if(!$this->tableExists($name) && $create) $this->tableCreate($name);
+		elseif (!$this->tableExists($name)) throw new Exception(sprintf('Nao existe a tabela %s', $name));
 		
 
-		$this->query = new flatDBtableQuery($name);
-		$this->query->path = $this->getTablePath($name);
+		$this->query = new flatDBtableQuery($name, $this->getTablePath($name));
 
 		return $this;
 	}
 
+	/**
+	 * Criar tabela
+	 * @param string $name  Nome da tabela
+	 * @return bool
+	 */
 	public function tableCreate($name)
 	{
 
-		$path = $getTablePath($name);
+		$path = $this->getTablePath($name);
 		if( !$this->directoryInstance->create($path) ) throw new Exception(sprintf('Não foi possível crear o diretorio da Tabela: "%s"!', $path));
 		return file_put_contents($dbPath . 'index.php', $this->strDenyAccess);
 	}
@@ -188,7 +205,19 @@ class flatDB
 	}
 
 	/**
-	 * Gerar o diretorio Tabela
+	 * Pegar todos os nomes das tabelas referente a DB
+	 * @param bool $outJSON TRUE: saida em JSON 
+	 * @return array|string  STRING: strJSON
+	 */
+	private function showTables($outJSON=false)
+	{
+		$result = $this->directoryInstance->showFolders($this->dbFolder); //return array
+		if ($outJSON) return json_encode($result);
+		return $result;
+	}
+
+	/**
+	 * Gerar o caminho para tabela
 	 * @param string $name  nome da tabela
 	 * @return string CAminho completo da tabela
 	 */
@@ -198,27 +227,17 @@ class flatDB
 	}
 
 
-	/**
-	 * Pegar todos os nomes das tabelas referente a DB
-	 * @param bool $outJSON TRUE: saida sera em JSON 
-	 * @return array|string
-	 */
-	public function allNameTable($outJSON=false)
-	{
-		$result = $this->directoryInstance->allNameFolders($this->dbFolder); //return array
-		if ($outJSON) return json_encode($result);
-		return $result;
-	}
+
 
 	/**
-	 * Setar o caminho do arquivo
-	 * @param string $path Nome do caminho
+	 * Gerar o caminho do arquivo
 	 * @param type $id ID
 	 * @return string retorna a string caminho montada
 	 */
-	private function setPathFileName(string $path, $id)
+	private function getPathFile($id)
 	{
-		return $path . '/row_' . $id . '.php';
+		
+		return query->tablePath . 'row_' . $id . '.php';
 	}
 
 
@@ -230,46 +249,7 @@ class flatDB
 	public function insert(array $array)
 	{
 
-		if( $this->query->hasExecute() ) throw new Exception(sprintf('consulta já foi feita'));
-
-
-		$table = $this->query->table;
-		$id = 0;
-		$metaData = [];//init
 		
-		$dirFolder = $this->dbFolder . $table;
-
-		if( !$this->directoryInstance->has($dirFolder) )
-		{
-			if( !$this->directoryInstance->create($dirFolder) )  throw new Exception(sprintf('Não foi possível criar o diretório: %s', $dirFolder));
-			else file_put_contents($this->dbFolder . $table . '/index.php', $strDenyAccess);
-
-			$id++;  //add +1
-
-			$metaData = [
-				'lastID' => 0,
-				'length' => 0,
-				'indexes' => []
-			];
-
-		}else
-		{
-			$metaData = $this->metaData();
-			$id = $metaData['lastID']++;
-		}
-
-		$array['id'] = $id;
-		
-
-		$this->put($this->setPathFileName($table, $id));//colocar/escrever
-
-		$metaData['lastID'] = $id;
-
-		if (array_key_exists($table, $this->indexes)) {
-			foreach ($this->indexes[$table] as $key => $value) {
-				if ( $array[$index] ) 
-			}
-		}
 	}
 
 
@@ -295,17 +275,17 @@ class flatDB
 	 * @param bool $relative  setar $path como relativo
 	 * @return type
 	 */
-	private function put($path,  array $array, $relative = true)
+	private function write($path,  array $array, $relative = true)
 	{
 		if ($relative) $path = $this->dbFolder . $path;
 
-		return file_put_contents($path, $this->strDenyAccess . json_encode($array) , LOCK_EX);
+		return file_put_contents($path, $this->strDenyAccess . json_encode($array, JSON_FORCE_OBJECT) , LOCK_EX);
 	}
 
 
-	private function selectFields($selector, $content)
+	private function selectedKey()
 	{
-
+		
 	}
 
 
@@ -315,18 +295,21 @@ class flatDB
 	 */
 	public function metaData()
 	{
+		if (!isset($this->query->table)) throw new Exception('Não existe tabela para consultar');
+		
+
 		$table = $this->query->table;
 
-		if (!array_key_exists($table, $this->metaDataCache)) {
+		if (!array_key_exists($table, $this->metaCache)) {
 
-			$filePath = $this->dbFolder . $table .'/'. $this->baseNameMetaData;
+			$filePath = $this->dbFolder . $table .'/meta.php';
 			if ( !file_exists($filePath) ) throw new Exception(sprintf('Metadata da tabela "%s" não encontrado!', $table));
 
-			$this->metaData[$table] = $this->read($filePath, false);
+			$this->metaCache[$table] = $this->read($filePath, false);
 			
 		}
 
-		return $this->metaDataCache[$table];
+		return $this->metaCache[$table];
 	}
 
 }// END class

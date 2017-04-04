@@ -37,7 +37,7 @@ class accessArrayElement
 
 			};
 			// return preg_replace_callback(['~(?J:\[([\'"])(?<el>.*?)\1\]|(?<el>\]?[^\[]+)|\[(?<el>(?:[^\[\]]+|(?R))*)\])~'], $func, $strSquareBracket);
-			return preg_replace_callback(['~^(?<master>[^\[\]]+)(?=\[)~', '~\[([^\[\](\[\'|\[\")(\'\]|\"\])]*)\]~'], $func, $strSquareBracket);
+			return preg_replace_callback(['~\[([^\[\](\[\'|\[\")(\'\]|\"\])]*)\]~'], $func, $strSquareBracket);
 
 	}
 
@@ -56,7 +56,7 @@ class accessArrayElement
 		$keys = [];//base para guarda
 		$func = function($matches) use(&$keys)
 		{
-			// var_dump($matches);//debug
+			var_dump($matches);//debug
 			if( isset($matches[1]) ) $keys[] = trim($matches[1]);
 			return $matches[0];
 		};

@@ -35,7 +35,7 @@ $arr =[
 ];
 
 
-$ok = $arrY->getArrayElement($arr, '[?][css][red]');
+$ok = $arrY->getArrayElement($arr, 'attr[css]');
 
 var_dump($ok);
 

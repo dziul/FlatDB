@@ -81,8 +81,24 @@ class flatDB
 		return is_dir($this->dataFolder. $name);
 	}
 
+	/**
+	 * Setar o caminho do arquivo
+	 * @param string $path Nome do caminho
+	 * @param type $id ID
+	 * @return string retorna a string caminho montada
+	 */
+	private function setPathFileName(string $path, $id)
+	{
+		return $path . '/row_' . $id . '.php';
+	}
 
-	public function add(array $array)
+
+	/**
+	 * Adcionar conteudo
+	 * @param array $array 
+	 * @return array
+	 */
+	public function insert(array $array)
 	{
 
 		if( $this->query->hasExecute() ) throw new Exception(sprintf('consulta já foi feita'));
@@ -102,27 +118,36 @@ class flatDB
 			$id++;  //add +1
 
 			$metaData = [
-				'lastID' => $id,
-				'length' => $id,
+				'lastID' => 0,
+				'length' => 0,
 				'indexes' => []
 			];
 
 		}else
 		{
 			$metaData = $this->metaData();
-			$id = $metaData['lasID']++;
-
+			$id = $metaData['lastID']++;
 		}
 
 		$array['id'] = $id;
 		
+
+		$this->put($this->setPathFileName($table, $id));//colocar/escrever
+
+		$metaData['lastID'] = $id;
+
+		if (array_key_exists($table, $this->indexes)) {
+			foreach ($this->indexes[$table] as $key => $value) {
+				if ( $array[$index] ) 
+			}
+		}
 	}
 
 
 	/**
 	 * Ler o arquivo
 	 * @param string $path  caminho do arquivo
-	 * @param bool $relative saber se o caminho setado em $path é relativo
+	 * @param bool $relative Setar $path como relativo
 	 * @return mixed
 	 */
 	private function read($path, $relative = true)
@@ -130,12 +155,35 @@ class flatDB
 		if ($relative) $path = $this->dataFolder . $path;
 
 		$contents = file_get_contents($path);
-		return unserialize(substr($contents, $this->strlenDenyAccess));
+		return json_decode(substr($contents, $this->strlenDenyAccess), true);
+
+	}
+
+	/**
+	 * Description
+	 * @param string $path caminho do arquivo 
+	 * @param array $array array a ser salvo
+	 * @param bool $relative  setar $path como relativo
+	 * @return type
+	 */
+	private function put($path,  array $array, $relative = true)
+	{
+		if ($relative) $path = $this->dataFolder . $path;
+
+		return file_put_contents($path, $this->strDenyAccess . json_encode($array) , LOCK_EX);
+	}
+
+
+	private function selectFields($selector, $content)
+	{
 
 	}
 
 
-
+	/**
+	 * Gerar informacoes da tabela 
+	 * @return array
+	 */
 	public function metaData()
 	{
 		$table = $this->query->table;
@@ -145,11 +193,11 @@ class flatDB
 			$filePath = $this->dataFolder . $table .'/'. $this->baseNameMetaData;
 			if ( !file_exists($filePath) ) throw new Exception(sprintf('Metadata da tabela "%s" não encontrado!', $table));
 
-			$this->metaData[$table] = $this->read($path, false);
+			$this->metaData[$table] = $this->read($filePath, false);
 			
 		}
 
-
 		return $this->metaDataCache[$table];
 	}
-}
+
+}// END class

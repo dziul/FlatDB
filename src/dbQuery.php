@@ -11,14 +11,29 @@ namespace darkziul;
  class DBQuery
  {
 
-	/**
-	 * @var number
-	 */
-	public $id = 0;
+	
 	/**
 	 * @var string
 	 */
 	public $table;
+	/**
+	 * @var number
+	 */
+	public $id = 0;
+
+	/**
+	 * @var string
+	 */
+	public $select=null;
+
+	/**
+	 * @var number
+	 */
+	public $offset = 0;
+	/**
+     * @var array
+     */
+    public $where = null;
 	/**
 	 * @var bool
 	 */

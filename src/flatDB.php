@@ -3,7 +3,7 @@
 namespace darkziul;
 
 use darkziul\Helpers\accessArrayElement;
-use darkziul\Helpers\mkDir;
+use darkziul\Helpers\directory;
 use \Exception as Exception;
 
 class flatDB
@@ -11,13 +11,13 @@ class flatDB
 	/**
 	 * @var string
 	 */
-	private  $dataFolder;
+	private  $dbFolder;
 
 	
 	/**
 	 * @var obj
 	 */
-	private $mkdir;
+	private $directoryInstance;
 	/**
 	 * @var string
 	 */
@@ -40,24 +40,105 @@ class flatDB
 	private $indexes =[];
 
 
+	/**
+	 * @var string
+	 */
+	private $dbBaseDir;
 
-	public function __construct($dbName = 'default', $dataPath = null)
+	/**
+	 * Nome do DB padrão 
+	 * @var string 
+	 */
+	private $dbNameDefault = '_dataDB';
+
+
+	/**
+	 * construtor
+	 * @param string|null $dbDir  caminho do diretiro
+	 * @return type
+	 */
+	public function __construct($dbDir = null) {
+
+		$this->directoryInstance = new directory();
+
+		$this->dbBaseDir = empty($dbDir) ? $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/_data_flatDB/' : $dbDir;
+		$this->strlenDenyAccess = strlen($this->strDenyAccess); //calcular o tamanho da string
+	}
+
+
+	/**
+	 * Gerar o caminho do diretorio do banco
+	 * @param string $dbPath 
+	 * @param string $dbName 
+	 * @return string  caminho construído
+	 */
+	private function setDirDataBase(string $dbName, $dbPath=null)
 	{
+		if (empty($dbPath)) return $this->dbBaseDir . $dbName .'/'; //Folder default
+		else  return $dbPath . '/' .$dbName. '/';
+	}
 
-		if(empty($dataPath)) $this->dataFolder = $dataPath = $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/flatFileDB/' . $dbName .'/'; //Folder default
-		else  $this->dataFolder = $dataPath . '/' .$dbName. '/';
 
 
-		$this->mkdir = new mkDir();
+	public function db($dbName = null)
+	{
+		if (empty($dbName)) $dbName = $this->dbNameDefault;
+		$this->dbFolder = $this->setDirDataBase($dbName);
 
-		if( !$this->mkdir->create($this->dataFolder) ) throw new Exception(sprintf('Não foi possível crear o diretorio do DB "%s"!', $this->dataFolder));
-		else file_put_contents($this->dataFolder . 'index.php', $this->strDenyAccess);
+		//Encadeamento | chaining
+		return $this;
+	}
+	/**
+	 * Criar o DB
+	 * @param string|null $dbName Nome do DB
+	 * @return bool
+	 */
+	public function dbCreate($dbName = null)
+	{
+		if (empty($dbName)) $dbName = $this->dbNameDefault;
+
+		$dbDir = $this->setDirDataBase($dbName);
 		
 
-		$this->strlenDenyAccess = strlen($this->strDenyAccess); //calcular o tamanho da string
-
-
+		if( !$this->directoryInstance->create($dbDir) ) throw new Exception(sprintf('Não foi possível crear o diretorio do DB: "%s"!', $dbDir));
+		return file_put_contents($dbDir . 'index.php', $this->strDenyAccess);		
 	}
+
+
+	/**
+	 * Deletar DB
+	 * @param string $dbName 
+	 * @param string|null $dbDir caminho do diretorio @example data/example/dir/
+	 * @return bool|null  NULL quando $dir não for um diretorio
+	 */
+	public function dbDelete($dbName = null)
+	{
+		if (empty($dbName)) $dbName = $this->dbNameDefault;
+
+		$dir = $this->setDirDataBase($dbName);
+		if (is_dir($dir))	{
+			return $this->directoryInstance->delete($dir);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Identificar se DB existe
+	 * @param string $dbName 
+	 * @param type|null $dbDir 
+	 * @return type
+	 */
+	public function dbExists($dbName = null)
+	{
+		if (empty($dbName)) $dbName = $this->dbNameDefault;
+		
+		$dir = $this->setDirDataBase($dbName);
+		return is_dir($dir);
+	}
+
+
+
 
 
 	/**
@@ -78,7 +159,12 @@ class flatDB
 	 */
 	public function tableExists(string $name)
 	{
-		return is_dir($this->dataFolder. $name);
+		return is_dir($this->dbFolder . $name . '/');
+	}
+
+	public function allTable()
+	{
+		$this->dbFolder
 	}
 
 	/**
@@ -108,12 +194,12 @@ class flatDB
 		$id = 0;
 		$metaData = [];//init
 		
-		$dirFolder = $this->dataFolder . $table;
+		$dirFolder = $this->dbFolder . $table;
 
-		if( !$this->mkdir->isDir($dirFolder) )
+		if( !$this->directoryInstance->has($dirFolder) )
 		{
-			if( !$this->mkdir->create($dirFolder) )  throw new Exception(sprintf('Não foi possível criar o diretório: %s', $dirFolder));
-			else file_put_contents($this->dataFolder . $table . '/index.php', $strDenyAccess);
+			if( !$this->directoryInstance->create($dirFolder) )  throw new Exception(sprintf('Não foi possível criar o diretório: %s', $dirFolder));
+			else file_put_contents($this->dbFolder . $table . '/index.php', $strDenyAccess);
 
 			$id++;  //add +1
 
@@ -152,7 +238,7 @@ class flatDB
 	 */
 	private function read($path, $relative = true)
 	{
-		if ($relative) $path = $this->dataFolder . $path;
+		if ($relative) $path = $this->dbFolder . $path;
 
 		$contents = file_get_contents($path);
 		return json_decode(substr($contents, $this->strlenDenyAccess), true);
@@ -168,7 +254,7 @@ class flatDB
 	 */
 	private function put($path,  array $array, $relative = true)
 	{
-		if ($relative) $path = $this->dataFolder . $path;
+		if ($relative) $path = $this->dbFolder . $path;
 
 		return file_put_contents($path, $this->strDenyAccess . json_encode($array) , LOCK_EX);
 	}
@@ -190,7 +276,7 @@ class flatDB
 
 		if (!array_key_exists($table, $this->metaDataCache)) {
 
-			$filePath = $this->dataFolder . $table .'/'. $this->baseNameMetaData;
+			$filePath = $this->dbFolder . $table .'/'. $this->baseNameMetaData;
 			if ( !file_exists($filePath) ) throw new Exception(sprintf('Metadata da tabela "%s" não encontrado!', $table));
 
 			$this->metaData[$table] = $this->read($filePath, false);

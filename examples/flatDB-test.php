@@ -20,9 +20,9 @@ $flatdb = new flatDB('_dataDB/');
 // var_dump($flatdb->db('example')->table('default'));//instance
 // var_dump($flatdb->db('example')->tableExists('default'));//exists
 // var_dump($flatdb->db('example')->tableDelete('default'), $flatdb->db('example')->tableExists('default'));//delete and check
-
+$whoArr = ['parent', 'self', 'other', 'child'];
 $arrInsert = [
-		'whos'=> 'a',
+		'who'=> $whoArr[mt_rand(0, count($whoArr)-1)],
 		'uniqid'=> uniqid(rand(),true),
 		'number'=>rand(19,90),
 		'group'=>[
@@ -31,6 +31,14 @@ $arrInsert = [
 			'c'=>substr(uniqid(rand(),true), -10)
 		]
 	];
-var_dump($flatdb->db('example')->table('default')->insert($arrInsert));//create
-// var_dump($flatdb->db('example')->table('default')->insert($arrInsert)->execute()	);//create
+// var_dump($flatdb->db('example')->table('default')->insert($arrInsert)->execute());//create
 
+
+$arrAdd = [
+	'who' => 'self'
+];
+$arrWhere = [
+	
+]
+// var_dump($flatdb->db('example')->table('default')->add($arrAdd)->execute());//add
+// // var_dump($flatdb->db('example')->table('default')->add($arrAdd)->execute());//add se tiver 

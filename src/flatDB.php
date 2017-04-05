@@ -42,8 +42,9 @@ class flatDB
 	 * armazenar conteudo para ser executado
 	 * @var array
 	 * 
-	 * [action]
+	 * [method]
 	 * [id]
+	 * [content]
 	 * [meta]
 	 * 
 	 */
@@ -99,6 +100,11 @@ class flatDB
 
 
 
+	/**
+	 * Identificar a DataBase para consulta
+	 * @param type|null $dbName nome da DB
+	 * @return this
+	 */
 	public function db($dbName = null)
 	{
 		if (!$this->dbExists($dbName)) throw new Exception(sprintf('Nao existe a tabela "%s".', $dbName));
@@ -247,7 +253,7 @@ class flatDB
 	/**
 	 * Adcionar conteudo
 	 * @param array $array 
-	 * @return array
+	 * @return this
 	 */
 	public function insert(array $array)
 	{
@@ -271,18 +277,102 @@ class flatDB
 		$meta['indexes'][$id] = $id;
 		$array['id'] = $id;
 
+		
+		$this->execute['meta'] = $meta; //set execute ==
+		$this->execute['id'] = $id;
+		$this->execute['content'] = $array;
+		$this->execute['method'] = 'insert';
 
-		$this->writeMeta($meta);
-		$this->write($this->getPathFile($id), $array, false);
 
 		//encadeamento
-		return $this->meta();
+		return $this;
 	}
 
 
-	public function execute()
+
+	public function add(array $array)
 	{
 
+		
+		$this->execute['meta'] = $meta; //set execute ==
+		$this->execute['id'] = $id;
+		$this->execute['content'] = $array;
+		$this->execute['method'] = 'add';
+
+		return $this;
+	}
+
+
+
+	/**
+	 * Ordernar
+	 * @param array $array ARRAY é obrigatorio ter as chaves 'key' e 'order' [DESC, ASC] @example array('key'=>'name' [,'order'=>'desc'])  outset :: orderna em DESC pelo NOME
+	 * @return this
+	 */
+	public function order(array $array)
+	{
+		$this->query->order = $array;
+
+		return $this;
+	}
+	/**
+	 * setar limite para consulta
+	 * @param number $n Posição limite para consulta
+	 * @return this
+	 */
+	public function limit($n)
+	{
+		$this->query->limit = $n;
+		return $this;
+	}
+	/**
+	 * Começar a partir de
+	 * @param number $n posição onde tem que começar a leitura
+	 * @return this
+	 */
+	public function offset($n)
+	{
+		$this->query->offset = $n;
+		return $this;
+	}
+	/**
+	 * configurar Condições
+	 * @param array $array ARRAY da condições
+	 * @return this
+	 */
+	public function where(array $array)
+	{
+		$this->query->where = $array;
+		return $this;
+	}
+	/**
+	 * Executar o métodos
+	 * @return bool
+	 */
+	public function execute()
+	{
+		if ('insert' === $this->execute['method']) {
+			
+			$this->writeMeta($this->execute['meta']);
+			$this->write($this->getPathFile($this->execute['id']), $this->execute['content'], false);
+
+			$this->execute = [];//reset var
+			return true;
+		}
+
+		if ('add' === $this->execute['method']) {
+				
+
+			return true;
+		}
+
+	}
+
+
+	private function findAll()
+	{
+		if (!isset($this->query->table)) throw new Exception('Nao ha tabela para consulta');
+		
 	}
 
 	/**
@@ -292,7 +382,6 @@ class flatDB
 	 */
 	private function getPathFile($id)
 	{
-		
 		return $this->query->tablePath . '/_input-' . $id . '.php';
 	}
 

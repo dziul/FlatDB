@@ -36,6 +36,11 @@ namespace darkziul;
 	 */
 	public $offset = 0;
 	/**
+	 * limite
+	 * @var number
+	 */
+	public $limit = -1;
+	/**
      * @var array
      */
     public $where = null;

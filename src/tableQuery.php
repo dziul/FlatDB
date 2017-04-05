@@ -3,16 +3,16 @@
 namespace darkziul;
 
 /**
- * Helper class DB QUERY
+ * table Query
  * @author Luiz Carlos Wagner
  * @license MIT
  **/
 
- class flatDBtableQuery
+ class tableQuery
  {
 
 	
-	/**
+	/** nome da tabela
 	 * @var string
 	 */
 	public $table;

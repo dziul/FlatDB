@@ -52,7 +52,7 @@ namespace darkziul\Helpers;
 	 * @param string $dir caminho do diretorio @example scard/data/dir/
 	 * @return null|bool  NULL quando $dir não for um diretorio
 	 */
-	public function delete(string $dir)
+	public function delete($dir)
 	{
 
 		if(is_dir($dir))
@@ -81,7 +81,7 @@ namespace darkziul\Helpers;
 	 * @param string $dir caminho do dir  @example data/example/
 	 * @return array  retorna todos os nomes de pasta existente no diretorio setado em $dir  @example $dir:'data/example/'   out: ['entry-1', 'entry-2']
 	 */
-	public function showFolders(string $dir)
+	public function showFolders($dir)
 	{
 		$outArr = [];//init
 		$recursiveDirIte = new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS);
@@ -90,7 +90,7 @@ namespace darkziul\Helpers;
 		{
 			if ($item->isDir()) $outArr[] = $item->getFilename();
 		}
-
+		$outArr['length'] = count($outArr); 
 		return $outArr;
 
 	}

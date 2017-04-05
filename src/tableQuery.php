@@ -42,12 +42,11 @@ namespace darkziul;
 	/**
 	 * @var bool
 	 */
-	private $execute=false;
+	private $executed = false;
 	/**
 	 * @var array
 	 */
 	public $order = ['key'=>'id', 'order'=>'desc'];
-
 
 	
 

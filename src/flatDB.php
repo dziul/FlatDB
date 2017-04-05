@@ -246,6 +246,27 @@ class flatDB
 
 
 
+	
+
+
+	/**
+	 * Adcionar conteudo
+	 * @param array $array 
+	 * @return array
+	 */
+	public function insert(array $array)
+	{
+		if (!isset($this->query->table)) throw new Exception('Nao ha tabela para consulta');
+
+
+		$id = 0;
+		if()
+
+		$filePath = $this->getPathFile($id);
+		$this->write($filePath, $array);
+
+	}
+
 	/**
 	 * Gerar o caminho do arquivo
 	 * @param type $id ID
@@ -259,18 +280,6 @@ class flatDB
 
 
 	/**
-	 * Adcionar conteudo
-	 * @param array $array 
-	 * @return array
-	 */
-	public function insert(array $array)
-	{
-
-		
-	}
-
-
-	/**
 	 * Ler o arquivo
 	 * @param string $path  caminho do arquivo
 	 * @param bool $relative Setar $path como relativo
@@ -278,7 +287,7 @@ class flatDB
 	 */
 	private function read($path, $relative = true)
 	{
-		if ($relative) $path = $this->db['path'] . $path;
+		if ($relative) $path = $this->query->tablePath . $path;
 
 		$contents = file_get_contents($path);
 		return json_decode(substr($contents, $this->strlenDenyAccess), true);
@@ -294,7 +303,7 @@ class flatDB
 	 */
 	private function write($path,  array $array, $relative = true)
 	{
-		if ($relative) $path = $this->db['path'] . $path;
+		if ($relative) $path = $this->query->tablePath . $path;
 
 		return file_put_contents($path, $this->strDenyAccess . json_encode($array, JSON_FORCE_OBJECT) , LOCK_EX);
 	}

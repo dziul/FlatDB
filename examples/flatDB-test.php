@@ -32,5 +32,5 @@ $arrInsert = [
 		]
 	];
 var_dump($flatdb->db('example')->table('default')->insert($arrInsert));//create
-// var_dump($flatdb->db('example')->table('default')->insert($arrInsert)->execute());//create
+// var_dump($flatdb->db('example')->table('default')->insert($arrInsert)->execute()	);//create
 

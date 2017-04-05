@@ -34,23 +34,20 @@ class flatDB
 	 */
 	private $strlenDenyAccess;
 	/**
-	 * @var array
-	 */
-	private $metaDataCache = [];
-	/**
 	 * @var string
 	 */
-	private $baseNameMetaData	 = 'meta.php';
-	/**
-	 * @var array
-	 */
-	private $indexes =[];
-
+	private $metaBaseName	 = 'meta.php';
 
 	/**
+	 * armazenar conteudo para ser executado
 	 * @var array
+	 * 
+	 * [action]
+	 * [id]
+	 * [meta]
+	 * 
 	 */
-	private $metaCache = [];
+	private $execute = [];
 
 
 	/**
@@ -246,8 +243,6 @@ class flatDB
 
 
 
-	
-
 
 	/**
 	 * Adcionar conteudo
@@ -259,11 +254,34 @@ class flatDB
 		if (!isset($this->query->table)) throw new Exception('Nao ha tabela para consulta');
 
 
-		$id = 0;
-		if()
+		$id = 1;
+		$meta = [];//
+		if (!$this->hasMeta()) {
 
-		$filePath = $this->getPathFile($id);
-		$this->write($filePath, $array);
+			$meta['last_id'] = $id;
+			$meta['length'] = $id;
+		} else {
+			$meta = $this->getMeta();
+			$meta['last_id']++;
+			$meta['length']++;
+
+			$id = $meta['last_id'];
+		}
+
+		$meta['indexes'][$id] = $id;
+		$array['id'] = $id;
+
+
+		$this->writeMeta($meta);
+		$this->write($this->getPathFile($id), $array, false);
+
+		//encadeamento
+		return $this->meta();
+	}
+
+
+	public function execute()
+	{
 
 	}
 
@@ -281,31 +299,30 @@ class flatDB
 
 	/**
 	 * Ler o arquivo
-	 * @param string $path  caminho do arquivo
+	 * @param string $PathOrFile  caminho ou nome do arquivo
 	 * @param bool $relative Setar $path como relativo
 	 * @return mixed
 	 */
-	private function read($path, $relative = true)
+	private function read($PathOrFile, $relative = true)
 	{
-		if ($relative) $path = $this->query->tablePath . $path;
+		if ($relative) $PathOrFile = $this->query->tablePath . $PathOrFile;
 
-		$contents = file_get_contents($path);
+		$contents = file_get_contents($PathOrFile);
 		return json_decode(substr($contents, $this->strlenDenyAccess), true);
-
 	}
 
 	/**
 	 * Description
-	 * @param string $path caminho do arquivo 
+	 * @param string $PathOrFile caminho do arquivo ou nome do arquivo
 	 * @param array $array array a ser salvo
 	 * @param bool $relative  setar $path como relativo
 	 * @return type
 	 */
-	private function write($path,  array $array, $relative = true)
+	private function write($PathOrFile,  array $array, $relative = true)
 	{
-		if ($relative) $path = $this->query->tablePath . $path;
+		if ($relative) $PathOrFile = $this->query->tablePath . $PathOrFile;
 
-		return file_put_contents($path, $this->strDenyAccess . json_encode($array, JSON_FORCE_OBJECT) , LOCK_EX);
+		return file_put_contents($PathOrFile, $this->strDenyAccess . json_encode($array, JSON_FORCE_OBJECT) , LOCK_EX);
 	}
 
 
@@ -315,27 +332,47 @@ class flatDB
 	}
 
 
+
+	/**
+	 * Coletar infor do metaData
+	 * @param bool $outJSON TRUE: retorna o string JSON
+	 * @return string|array
+	 */
+	public function meta($outJSON=false)
+	{
+		return ($outJSON) ? json_encode($this->getMeta()) : $this->getMeta();
+	}
 	/**
 	 * Gerar informacoes da tabela 
 	 * @return array
 	 */
-	public function metaData()
+	private function getMeta()
 	{
 		if (!isset($this->query->table)) throw new Exception('Não existe tabela para consultar');
-		
-
-		$table = $this->query->table;
-
-		if (!array_key_exists($table, $this->metaCache)) {
-
-			$filePath = $this->db['path'] . $table .'/meta.php';
-			if ( !file_exists($filePath) ) throw new Exception(sprintf('Metadata da tabela "%s" não encontrado!', $table));
-
-			$this->metaCache[$table] = $this->read($filePath, false);
-			
-		}
-
-		return $this->metaCache[$table];
+		if (!$this->hasMeta()) return false;
+		return $this->read($this->metaBaseName);
 	}
+
+	/**
+	 * Saber se tem metaData
+	 * @return bool
+	 */
+	private function hasMeta()
+	{
+		if (!isset($this->query->table)) throw new Exception('Não existe tabela para consultar');
+		return file_exists($this->query->tablePath . $this->metaBaseName);
+	}
+
+	/**
+	 * Salvar o conteudo metaData
+	 * @param type $array array do conteudo a ser salvo
+	 * @return bool
+	 */
+	private function writeMeta($array)
+	{
+		if (!isset($this->query->table)) throw new Exception('Não existe tabela para consultar');
+		return $this->write($this->metaBaseName, $array);
+	}
+
 
 }// END class

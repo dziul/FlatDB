@@ -1,1 +1,0 @@
-<?php return header("HTTP/1.0 404 Not Found"); exit(); //Negar navegação | Deny navigation ?>{"last_id":2,"length":2,"indexes":{"1":1,"2":2}}

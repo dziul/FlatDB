@@ -8,9 +8,9 @@ use darkziul\flatDB;
 
 $flatdb = new flatDB('_dataDB/');
 
+// var_dump( $flatdb->dbExists('example') );
 // var_dump( $flatdb->dbCreate('example') );
 // var_dump( $flatdb->db('example') );
-// var_dump( $flatdb->dbExists('example') );
 // var_dump( $flatdb->dbDelete('example') );
 
 // var_dump($flatdb->db('example')->tableShow());
@@ -35,10 +35,17 @@ $arrInsert = [
 
 
 $arrAdd = [
-	'who' => 'self'
+	'type' => 'array'
 ];
 $arrWhere = [
-	
-]
+	'who' => 'self'
+];
 // var_dump($flatdb->db('example')->table('default')->add($arrAdd)->execute());//add
-// // var_dump($flatdb->db('example')->table('default')->add($arrAdd)->execute());//add se tiver 
+// var_dump($flatdb->db('example')->table('default')->add($arrAdd)->where($arrWhere)->execute());//add e filter 
+
+
+// var_dump($flatdb->db('example')->table('default')->remove(2)->execute());//delete
+// var_dump($flatdb->db('example')->table('default')->remove([10,8])->execute());//delete multi
+
+
+var_dump($flatdb->db('example')->table('default')->meta());//delete

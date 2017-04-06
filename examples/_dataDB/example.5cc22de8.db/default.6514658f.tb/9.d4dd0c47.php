@@ -1,0 +1,1 @@
+<?php return header("HTTP/1.0 404 Not Found"); exit(); //Negar navegação | Deny navigation ?>{"who":"child","uniqid":"2477158e5da1114f035.30939567","number":62,"group":{"a":"7.86990861","b":"8.43540367","c":"1.93114585"},"id":9}

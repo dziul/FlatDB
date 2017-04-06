@@ -79,7 +79,7 @@ class flatDB
 	 */
 	private function getDbName($dbName)
 	{
-		return 'db_'.$dbName;
+		return $dbName  . '.' . $this->simplesHash($dbName) . '.db';
 	}
 
 	/**
@@ -90,12 +90,11 @@ class flatDB
 	 */
 	private function getDbPath($dbName, $dbPath=null)
 	{
-		if (empty($dbName)) $dbName = $this->db->name; //pegaNameDefault
-
+		// if (empty($dbName)) $dbName = $this->db->name; //pegaNameDefault
 		$dbName = $this->getDbName($dbName);//formatar nome
 
-		if (empty($dbPath)) return $this->db->basePath . $dbName .'/'; //Folder default
-		else  return $dbPath . '/' .$dbName. '/';
+		if (empty($dbPath)) return $this->db->basePath . $dbName . '/'; //Folder default
+		else  return $dbPath . '/' . $dbName . '/';
 	}
 
 
@@ -242,8 +241,8 @@ class flatDB
 	 */
 	private function getTablePath($name)
 	{
-		$prefix  =  'tb_';
-		return $this->db->path . $prefix . $name .'/';
+		$name  =  $name . '.' . $this->simplesHash($name) . '.tb';
+		return $this->db->path . $name . '/';
 	}
 
 
@@ -294,7 +293,7 @@ class flatDB
 	{
 
 		
-		$this->execute['meta'] = $meta; //set execute ==
+		$this->execute['meta'] = null; //set execute ==
 		$this->execute['id'] = $id;
 		$this->execute['content'] = $array;
 		$this->execute['method'] = 'add';
@@ -302,16 +301,145 @@ class flatDB
 		return $this;
 	}
 
+	public function remove($id=null) 
+	{
+		$this->execute['meta'] = $this->getMeta(); //set execute ==
+		$this->execute['id'] = is_array($id) ? $id: [$id];
+		$this->execute['content'] = null;
+		$this->execute['method'] = 'remove';
+
+		return $this;
+	}
+
+
+	/**
+	 * Executar o métodos
+	 * @return bool
+	 */
+	public function execute()
+	{
+		if ('insert' === $this->execute['method']) {
+			
+			$this->writeMeta($this->execute['meta']);
+			$this->write($this->getPathFile($this->execute['id']), $this->execute['content'], false);
+
+			$this->execute = [];//reset var
+			$this->removeCache();// remove todo os cache 
+			return true;
+		}
+
+		if ('add' === $this->execute['method']) {
+		
+
+
+			return true;
+		}
+
+		if ('remove' === $this->execute['method']) {
+		
+
+			$invertMetaIndexes = array_flip($this->execute['meta']['indexes']); //evitar varios loops
+			foreach ($this->execute['id'] as $id) {
+
+				if (!$this->fileExists($id)) throw new Exception(sprintf('Nao foi encontrado arquivo ID::%s', $id));
+				
+
+				if (in_array($id, $this->execute['meta']['indexes'])) {
+
+					$key = $invertMetaIndexes[$id];
+					unset($this->execute['meta']['indexes'][$key]);
+
+					unlink($this->getPathFile($id));
+					$this->execute['meta']['length']--; // igual a $e -= $e
+				} else {
+
+					throw new Exception(sprintf('ID::%s nao foi encontrado no metaData::indexes', $id));
+				}
+
+
+			}
+
+			// $this->execute['meta']['length'] = count($this->execute['meta']['indexes']);
+			$this->execute['meta']['last_id'] = end($this->execute['meta']['indexes']); // pegar ultima chave
+			$this->writeMeta($this->execute['meta']);//salvar novos dados
+			$this->removeCache();//delete todos os caches
+			return true;
+			// return $this->execute['meta'];
+			// return var_dump($invert, $this->execute['meta']['indexes']);//debug
+
+
+		}
+
+		return null;
+
+	}
+
+
+	private function findAll()
+	{
+		if (!isset($this->query->table)) throw new Exception('Nao ha tabela para consulta');
+		
+		// $table  = $this->query->table;
+		$tablePath  = $this->query->tablePath;
+        $order  = $this->query->order;
+        $limit  = $this->query->limit;
+        $offset = $this->query->offset;
+        $where  = $this->query->where;
+        $select = $this->query->select;
+
+
+        $hash=  sha1(json_encode($order+$where+$select) . $limit . $offset);
+        $cacheName = 'cache.' . $hash;
+        $cachePath = $this->getPathFile($cacheName);
+
+        if ($this->fileExists($cacheName)) return $this->read($cachePath, false);
+
+        if (!$this->hasMeta()) throw new Exception('Nao ha arquivo metaData para consulta');
+
+        $meta = $this->getMeta();
+
+        if (empty($meta['indexes'])) return null;//
+
+        if ('DESC' == $order['type']) krsort($meta['indexes']);
+        else ksort($meta['indexes']);
+
+
+	}
+
+
+	private function selectedKey()
+	{
+		
+	}
+
+
+	/**
+	 * Gerar o caminho do arquivo
+	 * @param type $id ID
+	 * @return string retorna a string caminho montada
+	 */
+	private function getPathFile($id)
+	{
+		return $this->query->tablePath . $id . '.' . $this->simplesHash($id)  . '.php';
+	}
+
+	private function fileExists($nameFile)
+	{
+		return file_exists($this->getPathFile($nameFile));
+	}
 
 
 	/**
 	 * Ordernar
-	 * @param array $array ARRAY é obrigatorio ter as chaves 'key' e 'order' [DESC, ASC] @example array('key'=>'name' [,'order'=>'desc'])  outset :: orderna em DESC pelo NOME
+	 * @param string $key
+	 * @param string $type DESC | ASC
 	 * @return this
 	 */
-	public function order(array $array)
+ 	public function order($key=null, $type='DESC')
 	{
-		$this->query->order = $array;
+
+		$this->query->order['key'] = empty($key) ? 'id' : $key;
+		$this->query->order['type'] = empty($type) ? 'DESC' : strtoupper($type);
 
 		return $this;
 	}
@@ -336,7 +464,7 @@ class flatDB
 		return $this;
 	}
 	/**
-	 * configurar Condições
+	 * configurar Condições  / Filtro
 	 * @param array $array ARRAY da condições
 	 * @return this
 	 */
@@ -345,46 +473,26 @@ class flatDB
 		$this->query->where = $array;
 		return $this;
 	}
-	/**
-	 * Executar o métodos
-	 * @return bool
-	 */
-	public function execute()
-	{
-		if ('insert' === $this->execute['method']) {
-			
-			$this->writeMeta($this->execute['meta']);
-			$this->write($this->getPathFile($this->execute['id']), $this->execute['content'], false);
 
-			$this->execute = [];//reset var
-			return true;
-		}
-
-		if ('add' === $this->execute['method']) {
-				
-
-			return true;
-		}
-
-	}
-
-
-	private function findAll()
-	{
-		if (!isset($this->query->table)) throw new Exception('Nao ha tabela para consulta');
-		
-	}
 
 	/**
-	 * Gerar o caminho do arquivo
-	 * @param type $id ID
-	 * @return string retorna a string caminho montada
+	 * Gerar um simples hash
+	 * @param string $string 
+	 * @return string
 	 */
-	private function getPathFile($id)
+	private function simplesHash($string)
 	{
-		return $this->query->tablePath . '/_input-' . $id . '.php';
+		return hash('crc32', $string);
+		// return strtolower(str_replace('=', '', base64_encode($string)));
 	}
 
+	private function removeCache()
+	{
+		foreach (glob($this->query->tablePath . 'cache*') as $file) {
+            unlink($file);
+        }
+
+	}
 
 	/**
 	 * Ler o arquivo
@@ -415,12 +523,6 @@ class flatDB
 	}
 
 
-	private function selectedKey()
-	{
-		
-	}
-
-
 
 	/**
 	 * Coletar infor do metaData
@@ -437,6 +539,11 @@ class flatDB
 	 */
 	private function getMeta()
 	{
+		/**
+		 * [last_id]
+		 * [legth]
+		 * [indexes]
+		 */
 		if (!isset($this->query->table)) throw new Exception('Não existe tabela para consultar');
 		if (!$this->hasMeta()) return false;
 		return $this->read($this->metaBaseName);

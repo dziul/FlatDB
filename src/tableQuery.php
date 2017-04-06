@@ -51,7 +51,7 @@ namespace darkziul;
 	/**
 	 * @var array
 	 */
-	public $order = ['key'=>'id', 'order'=>'desc'];
+	public $order = ['key'=>'id', 'type'=>'desc'];
 
 	
 

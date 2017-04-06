@@ -1,6 +1,6 @@
 {
-    "name":              "darkziul/phpdb",
-    "description":       "A generic database in php",
+    "name":              "darkziul/flatdb",
+    "description":       "A flat database simples and complete in php.",
     "type":              "library",
     "license":           "MIT",
     "keywords":          [

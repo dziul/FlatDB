@@ -32,7 +32,7 @@ $arrInsert = [
 		]
 	];
 // var_dump($flatdb->db('example')->table('default')->insert($arrInsert)->execute());//create
-var_dump($flatdb->db('example')->table('default')->insert($arrInsert, 'item')->execute());//create custom key
+// var_dump($flatdb->db('example')->table('default')->insert($arrInsert, 'item')->execute());//create custom key
 
 
 $arrAdd = [
@@ -42,14 +42,14 @@ $arrWhere = [
 	'who' => 'self'
 ];
 // var_dump($flatdb->db('example')->table('default')->add($arrAdd)->execute());//add
-// var_dump($flatdb->db('example')->table('default')->add($arrAdd)->where($arrWhere)->execute());//add e filter 
+var_dump($flatdb->db('example')->table('default')->add($arrAdd)->where($arrWhere)->execute());//add e filter 
 
 
 // var_dump($flatdb->db('example')->table('default')->remove(2)->execute());//delete
 // var_dump($flatdb->db('example')->table('default')->remove([10,8])->execute());//delete multi
 
 
-var_dump($flatdb->db('example')->table('default')->meta());//delete
+var_dump($flatdb->db('example')->table('default')->meta());//show metadata
 // $limit = 10000;
 
 // $begin = microtime(true);

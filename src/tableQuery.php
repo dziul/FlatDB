@@ -47,7 +47,7 @@ namespace darkziul;
 	/**
 	 * @var bool
 	 */
-	private $executed = false;
+	// private $executed = false;
 	/**
 	 * @var array
 	 */
@@ -61,13 +61,13 @@ namespace darkziul;
 		$this->table = $name;
 	}
 
-	private function execute()
-	{
-		$this->executed = true;
-	}
+	// private function execute()
+	// {
+	// 	$this->executed = true;
+	// }
 
-	private function hasExecute()
-	{
-		return $this->executed;
-	}
+	// private function hasExecute()
+	// {
+	// 	return $this->executed;
+	// }
 }

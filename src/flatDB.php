@@ -55,7 +55,7 @@ class flatDB
 	 * 
 	 */
 	private $execute = ['method' => null, 'id' => null, 'content' => null, 'meta' => null];
-
+	private $executeBackup;
 	/**
 	 * Prefixo do cache
 	 * @var string
@@ -70,6 +70,7 @@ class flatDB
 	 */
 	public function __construct($dirInit = null) {
 
+		$this->executeBackup = $this->execute;
 		$this->directoryInstance = new directory();
 
 		$this->db = new dbQuery();//instanciar class que guarda info do DB	
@@ -274,7 +275,7 @@ class flatDB
 	 */
 	public function insert(array $array, $nameID=null)
 	{
-		if (strlen(''.$nameID) < 3 ) throw new Exception(sprintf('"%s" precisa ter no minimo 3 caracteres', $nameID));
+		if (!empty($nameID) && strlen(''.$nameID) < 3 ) throw new Exception(sprintf('"%s" precisa ter no minimo 3 caracteres', $nameID));
 		if (!isset($this->query->table)) throw new Exception('Nao ha tabela para consulta');
 
 
@@ -297,6 +298,7 @@ class flatDB
 		if ($this->hasMeta() && !empty($nameID) && in_array($nameID, $meta['indexes'])) return $this;
 
 		$meta['indexes'][$id] = !empty($nameID) ? $nameID : $id;
+		$meta['indexes_flip'] = array_flip($meta['indexes']); // adicionar o indexes inversos
 		$meta['last_id'] = end($meta['indexes']);
 		$array['id'] = $meta['indexes'][$id];
 
@@ -317,8 +319,8 @@ class flatDB
 	{
 
 		
-		$this->execute['meta'] = null; //set execute ==
-		$this->execute['id'] = $id;
+		// $this->execute['meta'] = null; //set execute ==
+		// $this->execute['id'] = $id;
 		$this->execute['content'] = $array;
 		$this->execute['method'] = 'add';
 
@@ -338,30 +340,33 @@ class flatDB
 
 	/**
 	 * Executar o métodos
-	 * @return bool
+	 * @return bool|null NULL quando nao foi executado nenhum metodo
 	 */
 	public function execute()
 	{
+		$executed = false;
 		if ('insert' === $this->execute['method']) {
 			$this->writeMeta($this->execute['meta']);
 			$this->write($this->getPathFile($this->execute['id']), $this->execute['content'], false);
 
-			$this->execute = [];//reset var
-			$this->removeCache();// remove todo os cache 
-			return true;
+			$executed = true; // executado
 		}
 
-		if ('add' === $this->execute['method']) {
-		
+		elseif ('add' === $this->execute['method']) {
+
+			
+			// $this->execute['id'] = $id;
+			$contentAdd = $this->execute['content']; // conteudo para adicionar
+			$whereCompare = $this->query->where;
+			var_dump($contentAdd, $whereCompare);
 
 
-			return true;
+			$executed = true; // executado
 		}
 
 		if ('remove' === $this->execute['method']) {
 		
 
-			$invertMetaIndexes = array_flip($this->execute['meta']['indexes']); //evitar varios loops
 			foreach ($this->execute['id'] as $id) {
 
 				if (!$this->fileExists($id)) throw new Exception(sprintf('Nao foi encontrado arquivo ID::%s', $id));
@@ -369,7 +374,7 @@ class flatDB
 
 				if (in_array($id, $this->execute['meta']['indexes'])) {
 
-					$key = $invertMetaIndexes[$id];
+					$key = $this->execute['meta']['indexes_flip'][$id];
 					unset($this->execute['meta']['indexes'][$key]);
 
 					unlink($this->getPathFile($id));
@@ -385,15 +390,17 @@ class flatDB
 			// $this->execute['meta']['length'] = count($this->execute['meta']['indexes']);
 			$this->execute['meta']['last_id'] = end($this->execute['meta']['indexes']); // pegar ultima chave
 			$this->writeMeta($this->execute['meta']);//salvar novos dados
-			$this->removeCache();//delete todos os caches
-			return true;
-			// return $this->execute['meta'];
-			// return var_dump($invert, $this->execute['meta']['indexes']);//debug
-
-
+			
+			$executed = true;//executado metodo, finalizar
 		}
 
-		return null;
+
+		if ($executed) {
+			$this->execute = $this->executeBackup;//reset var
+			$this->removeCache();// remove todo os cache 
+			return true;//
+		}
+		else return null;
 
 	}
 
@@ -415,6 +422,7 @@ class flatDB
         $cacheName = $this->prefixCache . $hash;
         $cachePath = $this->getPathFile($cacheName);
 
+
         if ($this->fileExists($cacheName)) return $this->read($cachePath, false);
 
         if (!$this->hasMeta()) throw new Exception('Nao ha arquivo metaData para consulta');
@@ -430,8 +438,11 @@ class flatDB
 	}
 
 
-	private function selectedKey()
+
+
+	private function parser($content, $compare=null, $method=null)
 	{
+
 		
 	}
 

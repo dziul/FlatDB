@@ -28,7 +28,19 @@ $arrInsert = [
 		'group'=>[
 			'a'=>substr(uniqid(rand(),true), -10),
 			'b'=>substr(uniqid(rand(),true), -10),
-			'c'=>substr(uniqid(rand(),true), -10)
+			'c'=>substr(uniqid(rand(),true), -10),
+			'i' => 2
+		],
+		'unid' => 15,
+		'collection' => [
+			'item' => [
+				'use' => [
+					3,
+					20,
+					2,
+					150
+				]
+			]
 		]
 	];
 // var_dump($flatdb->db('example')->table('default')->insert($arrInsert)->execute());//create
@@ -42,14 +54,68 @@ $arrWhere = [
 	'who' => 'self'
 ];
 // var_dump($flatdb->db('example')->table('default')->add($arrAdd)->execute());//add
-var_dump($flatdb->db('example')->table('default')->add($arrAdd)->where($arrWhere)->execute());//add e filter 
+// var_dump($flatdb->db('example')->table('default')->add($arrAdd)->where($arrWhere)->execute());//add e filter 
 
 
 // var_dump($flatdb->db('example')->table('default')->remove(2)->execute());//delete
 // var_dump($flatdb->db('example')->table('default')->remove([10,8])->execute());//delete multi
 
 
-var_dump($flatdb->db('example')->table('default')->meta());//show metadata
+// var_dump($flatdb->db('example')->table('default')->meta());//show metadata
+
+
+$compare = [
+	'group' => ['i' => 2],
+	'unid' => 15,
+	'collection'=>['item'=>['user'=>[2] ] ]
+];
+
+function recursive_array_search($needle,$haystack) {
+
+		$return = false;
+	
+		foreach($haystack as $key=>$value) {
+	        
+	        if(is_array($needle)) {
+				foreach ($needle as $keyC => $valueC) {
+					$current_keyC = $keyC;
+					// var_dump($haystack ==  $value);
+					if($value===$valueC || (is_array($valueC) && recursive_array_search($value,$valueC) !== false)) {
+				        $return[$keyC] = $valueC .'__1';
+				    }
+				}
+			}
+
+	         if($needle===$value || (is_array($value) && recursive_array_search($needle,$value) !== false)) {
+		        $return[$key] =  $value;
+		    }
+	    }
+
+	    // var_dump($haystack);
+
+	    return $return;
+    
+    // return false;
+}
+
+
+var_dump( recursive_array_search($compare, $arrInsert ));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // $limit = 10000;
 
 // $begin = microtime(true);

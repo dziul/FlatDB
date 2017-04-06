@@ -7,6 +7,12 @@ use darkziul\Helpers\directory;
 use \Exception as Exception;
 
 
+
+/**
+ * anotação
+ * regex para identificar string JSON simples  ::   ^\[\{.+\}\]|^\{.+\}$    pega algo como [{code}] | {code}
+ */
+
 class flatDB
 {
 	/**
@@ -36,7 +42,7 @@ class flatDB
 	/**
 	 * @var string
 	 */
-	private $metaBaseName	 = 'meta.php';
+	private $metaBaseName	 = '__meta.php';
 
 	/**
 	 * armazenar conteudo para ser executado
@@ -48,7 +54,13 @@ class flatDB
 	 * [meta]
 	 * 
 	 */
-	private $execute = [];
+	private $execute = ['method' => null, 'id' => null, 'content' => null, 'meta' => null];
+
+	/**
+	 * Prefixo do cache
+	 * @var string
+	 */
+	private $prefixCache = '0.cache.';
 
 
 	/**
@@ -63,8 +75,8 @@ class flatDB
 		$this->db = new dbQuery();//instanciar class que guarda info do DB	
 
 
-
-		$this->db->basePath = is_null($dirInit) ? $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/_data_flatDB/' : $dirInit;
+		$nameDataDBdefault = '__dataflatdb';
+		$this->db->basePath = is_null($dirInit) ? $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/' . $nameDataDBdefault .  hash('crc32b', $nameDataDBdefault) . '.storage/' : $dirInit;
 		$this->directoryInstance->create($this->db->basePath);//cria o dir
 
 
@@ -123,9 +135,11 @@ class flatDB
 	public function dbCreate($dbName = null)
 	{
 
+		if(strlen(''.$dbName) < 3 ) throw new Exception(sprintf('"%s" precisa ter no minimo 3 caracteres', $dbName));
 		$dbPath = $this->getDbPath($dbName);
 		if( !$this->directoryInstance->create($dbPath) ) throw new Exception(sprintf('Não foi possível crear o diretorio do DB: "%s"!', $dbPath));
-		return is_numeric( file_put_contents($dbPath . 'index.php', $this->strDenyAccess) );		
+		// return $this->write($dbPath . 'index.php', '', false);//criar um index apenas com o codigo de 404
+		return true;//criar um index apenas com o codigo de 404
 	}
 
 
@@ -204,10 +218,13 @@ class flatDB
 	 */
 	public function tableCreate($name)
 	{
+		if(strlen(''.$name) < 3 ) throw new Exception(sprintf('"%s" precisa ter no minimo 3 caracteres', $name));
+		
 
 		$path = $this->getTablePath($name);
 		if( !$this->directoryInstance->create($path) ) throw new Exception(sprintf('Não foi possível crear o diretorio da Tabela: "%s"!', $path));
-		return is_numeric(file_put_contents($path . 'index.php', $this->strDenyAccess));
+		// return $this->write($path . 'index.php','',false); //criar um index apenas com o codigo de 404
+		return true;
 	}
 
 	/**
@@ -252,33 +269,40 @@ class flatDB
 	/**
 	 * Adcionar conteudo
 	 * @param array $array 
+	 * @param  mixed $nameID Caso seja necessario ADICIONAR um ID personalizado.
 	 * @return this
 	 */
-	public function insert(array $array)
+	public function insert(array $array, $nameID=null)
 	{
+		if (strlen(''.$nameID) < 3 ) throw new Exception(sprintf('"%s" precisa ter no minimo 3 caracteres', $nameID));
 		if (!isset($this->query->table)) throw new Exception('Nao ha tabela para consulta');
 
 
 		$id = 1;
 		$meta = [];//
 		if (!$this->hasMeta()) {
-
-			$meta['last_id'] = $id;
+			$meta['last_id'] = !empty($nameID) ? $nameID : $id;
 			$meta['length'] = $id;
 		} else {
-			$meta = $this->getMeta();
-			$meta['last_id']++;
-			$meta['length']++;
 
-			$id = $meta['last_id'];
+
+			$meta = $this->getMeta();
+			$indexesFlip = array_flip($meta['indexes']);
+			$meta['length'] = count($meta['indexes'])+1;
+			$id = end($indexesFlip)+1;
 		}
 
-		$meta['indexes'][$id] = $id;
-		$array['id'] = $id;
+
+		// caso $nameID ja tenha sido setado em metaDATA executa o outset "precoce"
+		if ($this->hasMeta() && !empty($nameID) && in_array($nameID, $meta['indexes'])) return $this;
+
+		$meta['indexes'][$id] = !empty($nameID) ? $nameID : $id;
+		$meta['last_id'] = end($meta['indexes']);
+		$array['id'] = $meta['indexes'][$id];
 
 		
 		$this->execute['meta'] = $meta; //set execute ==
-		$this->execute['id'] = $id;
+		$this->execute['id'] = !empty($nameID) ? $nameID : $id;
 		$this->execute['content'] = $array;
 		$this->execute['method'] = 'insert';
 
@@ -319,7 +343,6 @@ class flatDB
 	public function execute()
 	{
 		if ('insert' === $this->execute['method']) {
-			
 			$this->writeMeta($this->execute['meta']);
 			$this->write($this->getPathFile($this->execute['id']), $this->execute['content'], false);
 
@@ -389,7 +412,7 @@ class flatDB
 
 
         $hash=  sha1(json_encode($order+$where+$select) . $limit . $offset);
-        $cacheName = 'cache.' . $hash;
+        $cacheName = $this->prefixCache . $hash;
         $cachePath = $this->getPathFile($cacheName);
 
         if ($this->fileExists($cacheName)) return $this->read($cachePath, false);
@@ -420,7 +443,7 @@ class flatDB
 	 */
 	private function getPathFile($id)
 	{
-		return $this->query->tablePath . $id . '.' . $this->simplesHash($id)  . '.php';
+		return $this->query->tablePath . $this->simplesHash($id)  . 'k' . $id . '.php';
 	}
 
 	private function fileExists($nameFile)
@@ -482,13 +505,18 @@ class flatDB
 	 */
 	private function simplesHash($string)
 	{
-		return hash('crc32', $string);
-		// return strtolower(str_replace('=', '', base64_encode($string)));
+		// return hash('crc32', $string); //lower
+		// return strtolower(str_replace('=', '', base64_encode($string))); //lower
+		// return is_numeric($string) ? $string/.5 . '.' . $string+$string; //fast
+		// return  str_pad($string, 24, 'a0b1c2d3e4f5g6900');//alternative
+		if (is_numeric($string)) return '' . ($string+1)/3.14159265359; //number PI
+		else return $string[2] . $string[0] . $string[1] . $string[0];
 	}
 
 	private function removeCache()
 	{
-		foreach (glob($this->query->tablePath . 'cache*') as $file) {
+		$pattern = $this->prefixCache . '*';
+		foreach (glob($this->query->tablePath . $pattern) as $file) {
             unlink($file);
         }
 
@@ -505,7 +533,10 @@ class flatDB
 		if ($relative) $PathOrFile = $this->query->tablePath . $PathOrFile;
 
 		$contents = file_get_contents($PathOrFile);
-		return json_decode(substr($contents, $this->strlenDenyAccess), true);
+		$contents = substr($contents, $this->strlenDenyAccess);
+
+		if (preg_match('~^\[\{.+\}\]|^\{.+\}$~', $contents)) return json_decode($contents, true);
+		else substr($contents, $this->strlenDenyAccess);
 	}
 
 	/**
@@ -515,11 +546,14 @@ class flatDB
 	 * @param bool $relative  setar $path como relativo
 	 * @return type
 	 */
-	private function write($PathOrFile,  array $array, $relative = true)
+	private function write($PathOrFile,  $content, $relative = true)
 	{
 		if ($relative) $PathOrFile = $this->query->tablePath . $PathOrFile;
 
-		return file_put_contents($PathOrFile, $this->strDenyAccess . json_encode($array, JSON_FORCE_OBJECT) , LOCK_EX);
+		if (is_array($content)) $content = json_encode($content);
+		// if (is_array($content)) $content = json_encode($content, JSON_FORCE_OBJECT);
+
+		return is_numeric(file_put_contents($PathOrFile, $this->strDenyAccess . $content  , LOCK_EX));
 	}
 
 

@@ -115,7 +115,7 @@ class FlatDB
      * @return array The inserted object, with an 'id' key, holding the unique
      *  id of this entry in the table.
      */
-    public function insert($obj)
+    public function insert($obj, $id=null)
     {
         if (!is_array($obj)) {
             throw new Exception('Can only write arrays');
@@ -156,7 +156,8 @@ class FlatDB
         }
 
         // add the id key to the object to be inserted
-        $obj['id'] = $id;
+        
+        $obj['id'] = if(empty($ID)) ? $id : $ID;
 
         // create new file
         $this->write($table . '/entry_' . $id . '.php', $obj);

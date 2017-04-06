@@ -32,6 +32,7 @@ $arrInsert = [
 		]
 	];
 // var_dump($flatdb->db('example')->table('default')->insert($arrInsert)->execute());//create
+var_dump($flatdb->db('example')->table('default')->insert($arrInsert, 'item')->execute());//create custom key
 
 
 $arrAdd = [
@@ -49,3 +50,53 @@ $arrWhere = [
 
 
 var_dump($flatdb->db('example')->table('default')->meta());//delete
+// $limit = 10000;
+
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	$d = hash('crc32', $i);
+// }
+// $end = microtime(true);
+// var_dump( 'METHOD 1 :: ' . ($end - $begin) );
+
+/* FAST */
+// $d = [];//init
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	$string = '.0a1b2c3d4f6g7h8i9j';
+// 	$d[] = str_pad((.5/($i+1)), 25, $string);
+// }
+// $end = microtime(true);
+// var_dump('METHOD 2 :: ' . ($end - $begin) );
+// /* FAST */
+
+
+// $d = [];//init
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	$string = (.5/($i+1)) . '.0a1b2c3d4f6g7h8i9j';
+
+// 	$d[] = mb_substr($string, 0, 25);
+// }
+// $end = microtime(true);
+// var_dump('METHOD 2-1 :: ' . ($end - $begin) );
+
+
+// $d = [];//init
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	$string = (($i+1)/3.14159265359);
+// 	$d[] = ''.$string;
+
+// 	// $string = 'example';
+// 	// $d[] = @$string[5] . @$string[4] . @$string[1] . @$string[0] . @$string[3];
+// }
+// $end = microtime(true);
+// var_dump($d,'METHOD 2-1-1 :: ' . ($end - $begin) );
+
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	$d = strtolower(str_replace('=', '', base64_encode($i)));
+// }
+// $end = microtime(true);
+// var_dump( 'METHOD 3 :: ' . ($end - $begin) );

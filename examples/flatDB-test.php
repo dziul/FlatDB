@@ -67,39 +67,65 @@ $arrWhere = [
 $compare = [
 	'group' => ['i' => 2],
 	'unid' => 15,
-	'collection'=>['item'=>['user'=>[2] ] ]
+	'collection'=>['item'=>['use'=>[150] ] ]
 ];
 
-function recursive_array_search($needle,$haystack) {
+function arraySearch($needle, $haystack, &$data=null) {
 
-		$return = false;
-	
-		foreach($haystack as $key=>$value) {
-	        
-	        if(is_array($needle)) {
-				foreach ($needle as $keyC => $valueC) {
-					$current_keyC = $keyC;
-					// var_dump($haystack ==  $value);
-					if($value===$valueC || (is_array($valueC) && recursive_array_search($value,$valueC) !== false)) {
-				        $return[$keyC] = $valueC .'__1';
-				    }
+	if(is_null($data)) $data = [];
+	// if(is_null($data)) $data = [];
+
+	if (is_array($needle) ) {
+
+		foreach ($needle as $KEY => $VALUE) {
+
+
+			if (is_array($VALUE)) {
+
+				// var_dump($needle);
+
+				if (isset($haystack[$KEY])) {
+
+					$data = arraySearch($VALUE, $haystack[$KEY], $data);
 				}
+
+				
+			} else {
+
+				if ($key = array_search($VALUE, $haystack)) {
+					$data[$key] = $haystack[$key];
+				} else {
+					$data  = false;
+				}
+
+				
+				// var_dump($KEY);
+				// foreach ($haystack as $key => $value) {
+				// 	if ($VALUE == $value) {
+				// 		$data[$key] = $value;
+				// 	}
+				// }
+				
 			}
 
-	         if($needle===$value || (is_array($value) && recursive_array_search($needle,$value) !== false)) {
-		        $return[$key] =  $value;
-		    }
-	    }
 
-	    // var_dump($haystack);
+			if(!$data) break;
+			
+		}
 
-	    return $return;
-    
-    // return false;
+		
+
+
+		
+
+	}
+
+	return $data;
+
 }
 
 
-var_dump( recursive_array_search($compare, $arrInsert ));
+var_dump( arraySearch($compare, $arrInsert ));
 
 
 

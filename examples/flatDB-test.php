@@ -1,4 +1,4 @@
-<?php
+	<?php
 
 require 'autoload.php';
 
@@ -73,8 +73,7 @@ $compare = [
 function arraySearch($needle, $haystack, &$data=null) {
 
 	if(is_null($data)) $data = [];
-	// if(is_null($data)) $data = [];
-
+	// var_dump($data);
 	if (is_array($needle) ) {
 
 		foreach ($needle as $KEY => $VALUE) {
@@ -87,24 +86,23 @@ function arraySearch($needle, $haystack, &$data=null) {
 				if (isset($haystack[$KEY])) {
 
 					$data = arraySearch($VALUE, $haystack[$KEY], $data);
-				}
+				} else {}
 
 				
 			} else {
+
+				// foreach ($haystack as $key => $value) {
+				// 	var_dump($VALUE, $KEY);
+				// 	if (isset($haystack[$VALUE])) {
+				// 		var_dump($value);
+				// 	}
+				// }
 
 				if ($key = array_search($VALUE, $haystack)) {
 					$data[$key] = $haystack[$key];
 				} else {
 					$data  = false;
 				}
-
-				
-				// var_dump($KEY);
-				// foreach ($haystack as $key => $value) {
-				// 	if ($VALUE == $value) {
-				// 		$data[$key] = $value;
-				// 	}
-				// }
 				
 			}
 
@@ -125,7 +123,28 @@ function arraySearch($needle, $haystack, &$data=null) {
 }
 
 
-var_dump( arraySearch($compare, $arrInsert ));
+// $limit = 10000;
+
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	arraySearch($compare, $arrInsert );
+// }
+// $end = microtime(true);
+// var_dump($end - $begin);
+
+
+// $arr = [
+// 	'ok'=>['test'=>2],
+// 	'ok'=>['test'=>5],
+// 	'last'
+// ];
+
+
+// $compare = [
+// 	'ok'
+// ];
+
+var_dump(arraySearch($compare, $arrInsert ));
 
 
 

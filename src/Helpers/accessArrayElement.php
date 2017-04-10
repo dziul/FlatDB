@@ -57,7 +57,15 @@ class accessArrayElement
 		return self::findArrayElement($needle, $array, true);
 	}
 
-	private static function findArrayElement($needle, array $array, $methodExists=null)
+
+	/**
+	 * Econtrar a partir da chave
+	 * @param type $needle String/Array das chaves a ser buscada
+	 * @param array $array Array a ser consultado
+	 * @param type|null $methodExists TRUE ativa o metodo Exists, sua saida sera BOOL, FALSE percorre normalmente
+	 * @return array|bool  Array dos elementos encontrados ou BOOL caso o argumento $methodExists for TRUE
+	 */
+	private static function findArrayElementKey($needle, array $array, $methodExists=true)
 	{
 		$hasValue;
 		$result = [];
@@ -67,25 +75,14 @@ class accessArrayElement
 		if (!$isArray) {
 			$needle = [$needle];
 		}
- 
-		foreach ($needle as $key => $value) {
+ 		
+		foreach ($needle as $key) {
 
-			if (array_key_exists($value, $needle)) {
-				$k = $value;
-				$hasValue = false;
-			} else {
-				$hasValue = true;
-				$k = $key;
-			};
-
-			$content = self::parseAndValiteKey(self::defineOperator($k), $array);
-			var_dump(in_array($value, $needle));
+			$content = self::parseAndValiteKey(self::defineOperator($key), $array);
+			
 			$result[] = $content;
 
 			if($methodExists) {
-				
-				// if ($hasValue && !in_array($value, $content)) return false; 
-
 				if (empty($content)) return false;
 				// if ($content == null) return false;
 			}

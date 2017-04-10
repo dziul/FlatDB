@@ -94,7 +94,7 @@ $arr = [
 
 
 
-var_dump(accessArrayElement::get(['main.+.name'=>'g','main.+.id'], $arr));
+var_dump(accessArrayElement::get(['main.+.name','main.+.id'], $arr));
 
 // $limit = 10000;
 // $begin = microtime(true);

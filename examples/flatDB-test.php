@@ -3,9 +3,10 @@
 require 'autoload.php';
 
 use darkziul\Helpers\accessArrayElement as accessArrayElement;
+use darkziul\Helpers\accessArrayElementUseEval as accessArrayElementUseEval;
 use darkziul\flatDB;
 
-
+// $accessAE = new accessArrayElement();
 $flatdb = new flatDB('_dataDB/');
 
 // var_dump( $flatdb->dbExists('example') );
@@ -21,6 +22,9 @@ $flatdb = new flatDB('_dataDB/');
 // var_dump($flatdb->db('example')->tableExists('default'));//exists
 // var_dump($flatdb->db('example')->tableDelete('default'), $flatdb->db('example')->tableExists('default'));//delete and check
 $whoArr = ['parent', 'self', 'other', 'child'];
+
+
+
 $arrInsert = [
 		'who'=> $whoArr[mt_rand(0, count($whoArr)-1)],
 		'uniqid'=> uniqid(rand(),true),
@@ -64,74 +68,64 @@ $arrWhere = [
 // var_dump($flatdb->db('example')->table('default')->meta());//show metadata
 
 
-$compare = [
-	'group' => ['i' => 2],
-	'unid' => 15,
-	'collection'=>['item'=>['use'=>[150] ] ]
+$arr = [
+	
+	'main' => [
+		[
+			'id'=> uniqid(rand(),true),
+			'description' => 'okokok',
+			'name' => 'pedro'
+		],
+		[
+			'id'=> uniqid(rand(),true),
+			'description' => 'okokok',
+			['title'=>'test'],
+			['title'=>'test2']
+		],
+		[
+			'id'=> uniqid(rand(),true),
+			'description' => 'okokok',
+			['test1','test2','test3']
+		]
+	],
+	'test'
+
 ];
 
-function arraySearch($needle, $haystack, &$data=null) {
-
-	if(is_null($data)) $data = [];
-	// var_dump($data);
-	if (is_array($needle) ) {
-
-		foreach ($needle as $KEY => $VALUE) {
 
 
-			if (is_array($VALUE)) {
-
-				// var_dump($needle);
-
-				if (isset($haystack[$KEY])) {
-
-					$data = arraySearch($VALUE, $haystack[$KEY], $data);
-				} else {}
-
-				
-			} else {
-
-				// foreach ($haystack as $key => $value) {
-				// 	var_dump($VALUE, $KEY);
-				// 	if (isset($haystack[$VALUE])) {
-				// 		var_dump($value);
-				// 	}
-				// }
-
-				if ($key = array_search($VALUE, $haystack)) {
-					$data[$key] = $haystack[$key];
-				} else {
-					$data  = false;
-				}
-				
-			}
-
-
-			if(!$data) break;
-			
-		}
-
-		
-
-
-		
-
-	}
-
-	return $data;
-
-}
-
+var_dump(accessArrayElement::get(['main.+.name'=>'g','main.+.id'], $arr));
 
 // $limit = 10000;
-
 // $begin = microtime(true);
 // for ($i=0; $i < $limit; $i++) { 
-// 	arraySearch($compare, $arrInsert );
+// 	accessArrayElement::get('main.+.id', $arr);
 // }
 // $end = microtime(true);
 // var_dump($end - $begin);
 
+
+// var_dump(accessArrayElement::defineOperator('main[2][id]', $arr));
+
+// $limit = 10000;
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	accessArrayElementUseEval::get('main[2][id]', $arr);
+// }
+// $end = microtime(true);
+// var_dump($end - $begin);
+
+
+// var_dump( arrayElementExists(['collection[item]' => 'use'], $arrInsert) );
+	
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	$accessArrayElement->getArrayElement($arrInsert, '[collection][item][use]');
+// }
+// $end = microtime(true);
+// var_dump($end - $begin);
+
+// var_dump( $accessArrayElement->getArrayElement($arrInsert, '[collection][item][use]') );
 
 // $arr = [
 // 	'ok'=>['test'=>2],
@@ -144,7 +138,7 @@ function arraySearch($needle, $haystack, &$data=null) {
 // 	'ok'
 // ];
 
-var_dump(arraySearch($compare, $arrInsert ));
+// var_dump(arraySearch($compare, $arrInsert ));
 
 
 
@@ -210,4 +204,4 @@ var_dump(arraySearch($compare, $arrInsert ));
 // 	$d = strtolower(str_replace('=', '', base64_encode($i)));
 // }
 // $end = microtime(true);
-// var_dump( 'METHOD 3 :: ' . ($end - $begin) );
+// var_dump( 'METHOD 3 :: ' . ($end - $begin) );	

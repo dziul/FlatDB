@@ -3,133 +3,137 @@
 namespace darkziul\Helpers;
 
 /**
- * acess Array Element
+ * A simple and secure helper to manipulete Array in various ways via dot notation
  * @author Luiz Carlos Wagner
  * @license MIT
  **/
+
+
+// FEITO teste entre EVAL e FOREACH, EVAL foi mais rapido =====
+// ============================================================
+
+
+// STRING colchete  key[subjey] ou [key][subkey]  
+
+
 class accessArrayException extends \Exception{}
 
 class accessArrayElement
 {
-
-	// public function __construct(){}
-
- 	/**
- 	 * @var string
- 	 **/
- 	// private static $delimiter = '.'; //default
+	/**
+	 * esse metodo eh mais rapido do que o bracket notation
+	 */
 
 
+	private static $notFoundMessage = 'NOT_FOUND';
 
-	//squareBracket = colchete
-	public function bracket($strSquareBracket)
+	/**
+	 * Definir o operador
+	 * @param string $stringNotNotation String do not notation @example key.subkey.main.one 
+	 * @return array
+	 */
+	public static function defineOperator($stringNotNotation)
 	{
+		return explode('.', $stringNotNotation);
+	}
 
-			
 
-			$func = function($matches){
-			    var_dump($matches);//debug
-			    // return;
-			    if( empty(@$matches[1]) ) return $matches[0];
+	/**
+	 * Obter o valor procurado em $array por $string
+	 * @package self::findArrayElement
+	 * @param string $dotNotation  String contendo o padrao DOT NOTATION @example master.people.name 
+	 * @param array $array Array a ser consultado
+	 * @return mixed  valor encontrado em $array por $string ou NULL caso ao contrario
+	 */
+	public static function  get($dotNotation, array $array)
+	{
+		return self::findArrayElement($dotNotation, $array);	
+	}
 
-			    $match = $matches[1];
-			    return  is_numeric($match) ? '['.$match.']' : '["'.$match.'"]'; 
 
+	public static function exists($needle, array $array)
+	{
+		// var_dump($needle[0],$needle, isset($needle[0]) && array_key_exists(0, $needle));
+		return self::findArrayElement($needle, $array, true);
+	}
+
+	private static function findArrayElement($needle, array $array, $methodExists=null)
+	{
+		$hasValue;
+		$result = [];
+		$array = $array;
+
+		$isArray = is_array($needle);
+		if (!$isArray) {
+			$needle = [$needle];
+		}
+ 
+		foreach ($needle as $key => $value) {
+
+			if (array_key_exists($value, $needle)) {
+				$k = $value;
+				$hasValue = false;
+			} else {
+				$hasValue = true;
+				$k = $key;
 			};
-			// return preg_replace_callback(['~(?J:\[([\'"])(?<el>.*?)\1\]|(?<el>\]?[^\[]+)|\[(?<el>(?:[^\[\]]+|(?R))*)\])~'], $func, $strSquareBracket);
-			return preg_replace_callback(['~\[([^\[\](\[\'|\[\")(\'\]|\"\])]*)\]~'], $func, $strSquareBracket);
 
-	}
+			$content = self::parseAndValiteKey(self::defineOperator($k), $array);
+			var_dump(in_array($value, $needle));
+			$result[] = $content;
 
+			if($methodExists) {
+				
+				// if ($hasValue && !in_array($value, $content)) return false; 
 
-
-
-	public function getArrayElement(array $array, $keys)
-	{
-		return $this->arrayElementMultidimencional($array, $this->buildAccessKey($keys), 'get');
-	}
-
-	private function buildAccessKey($squareBracket)
-	{
-
-		// return $this;//debug
-		$keys = [];//base para guarda
-		$func = function($matches) use(&$keys)
-		{
-			var_dump($matches);//debug
-			if( isset($matches[1]) ) $keys[] = trim($matches[1]);
-			return $matches[0];
-		};
-		//get main[key][key] || [main][key][key]
-		//get test | test[test] | [test][test] | ['test']['test']
-		preg_replace_callback(['~^([^\[]+)$~','~^([^\[\]]+)\[~','~\[([^\[\](\[\'|\[\")(\'\]|\"\])]*)\]~'], $func, $squareBracket);
-
-		if( !count($keys) ) throw new Exception("Not build access key");
-		// var_dump($keys);//debug
-		return $keys;
-
-	}
-
-	private function arrayElementMultidimencional(array $array, $keys, $mode = 'get', $value = '', $recursive = false)
-	{
-		/**
-		 * 
-		 * $mode
-		 *  get :: default
-		 *  set
-		 *  unset
-		 * 
-		 **/
-		foreach ($keys as $key)
-		{
-			array_shift($keys);//remove o primeiro
-			$before = $array; // save content array|content
-			
-
-
-			// BEGIN access Multidimencional
-			// $mode :: get
-			if(in_array($key, ['?', '*'])) 
-			{
-				$ownerlessArr = [];//init
-				// $varTEMP = '{{abc@@##%%__TEMP__%%##@@abc}}';
-				foreach($before as $KEY => $VALUE)
-				{
-
-					if( is_array($VALUE) && !empty($VALUE) )
-					{
-
-						$data = $this->arrayElementMultidimencional($VALUE, $keys, false, false, true);
-						if( $recursive && is_array($data) && isset($data[0]) ) $data = $data[0];
-
-						if( !empty($data)  ) $ownerlessArr[] = $data;
-					}  
-
-					// var_dump($ownerlessArr);//debug
-				}
-				// var_dump($ownerlessArr);//debug
-				return $ownerlessArr;
+				if (empty($content)) return false;
+				// if ($content == null) return false;
 			}
-			// if('set' == $mode && '' == $key)
-			// {
-			// 	var_dump($key);
-			// }
-			// END access Multidimencional
+		}
+		if ($methodExists) return true;
+		return $result;
+	}
 
 
-			if( !is_array($array) || !isset($array[$key]) ) return null;
+	/**
+	 * Analizar e validar a chave
+	 * Procurar em $array por $keys
+	 * @param array $needle Array contendo as chaves a ser procurada e percorridas 
+	 * @param array $haystack Array de entrada
+	 * @param string $method Defini o metodo a ser usado
+	 * @return mixed  Retorna o valor da chave analizada e validada ou NULL caso ao contrario
+	 */
+	private static function parseAndValiteKey(array $keys, array $array, $method='get')
+	{
+		$newArr = [];//init
+		foreach ($keys as $key) {
+			array_shift($keys);
+			$before = $array;
+			//+ determina que o que vier imediatamente antes dele deve aparecer 1 ou mais vezes na expressão.
+			if ($key === '+') {
+				foreach ($before as $k => $v) {
+					if(is_array($v)) {
+						$newArr[$k] = self::parseAndValiteKey($keys, $v);
+						// var_dump($newArr[$k]);
+						if(is_null($newArr[$k])) unset($newArr[$k]);
+					}
+				}
+				return $newArr;
+			}
+
+			if (!is_array($array) || !isset($array[$key])) return null;
 			$array = $array[$key];
 		}
 
+
+
 		return $array;
 
-
 	}
 
 
-	private function callUserFuncAcessArray()
-	{
-		call_user_func_array($func, $paramArr);
-	}
+
+
+
 
  }//END class

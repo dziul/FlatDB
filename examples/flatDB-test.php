@@ -71,16 +71,17 @@ $arrWhere = [
 $arr = [
 	
 	'main' => [
-		[
-			'id'=> uniqid(rand(),true),
-			'description' => 'okokok',
-			'name' => 'pedro'
-		],
+		
 		[
 			'id'=> uniqid(rand(),true),
 			'description' => 'okokok',
 			['title'=>'test'],
 			['title'=>'test2']
+		],
+		[
+			'id'=> [uniqid(rand(),true), uniqid(rand(),true), uniqid(rand(),true), 'ok', ''],
+			'description' => 'okokok',
+			'name' => 'pedro'
 		],
 		[
 			'id'=> uniqid(rand(),true),
@@ -94,23 +95,33 @@ $arr = [
 
 
 
-var_dump(accessArrayElement::get(['main.+.name','main.+.id'], $arr));
+var_dump(accessArrayElement::get(['main.[+].description', 'main.[+].id'], $arr));
+
+
+
+
+// function test($key, $t=0){
+
+// 	if($t) {
+// 		return ($key === '+' || $key === '(+)' || $key == '(?)' || $key == '[?]' || $key == '[+]');
+// 	} else {
+// 		return (in_array($key, ['+', '(+)', '(?)', '[?]', '[+]']));
+// 	}
+// }
 
 // $limit = 10000;
 // $begin = microtime(true);
 // for ($i=0; $i < $limit; $i++) { 
-// 	accessArrayElement::get('main.+.id', $arr);
+// 	test('+',1);
 // }
 // $end = microtime(true);
 // var_dump($end - $begin);
 
 
-// var_dump(accessArrayElement::defineOperator('main[2][id]', $arr));
-
-// $limit = 10000;
+// // $limit = 10000;
 // $begin = microtime(true);
 // for ($i=0; $i < $limit; $i++) { 
-// 	accessArrayElementUseEval::get('main[2][id]', $arr);
+// 	test('+');	
 // }
 // $end = microtime(true);
 // var_dump($end - $begin);

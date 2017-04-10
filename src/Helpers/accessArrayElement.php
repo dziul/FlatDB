@@ -40,55 +40,104 @@ class accessArrayElement
 
 	/**
 	 * Obter o valor procurado em $array por $string
-	 * @package self::findArrayElement
+	 * @package self::parserAndConfigure
 	 * @param string $dotNotation  String contendo o padrao DOT NOTATION @example master.people.name 
 	 * @param array $array Array a ser consultado
 	 * @return mixed  valor encontrado em $array por $string ou NULL caso ao contrario
 	 */
 	public static function  get($dotNotation, array $array)
 	{
-		return self::findArrayElement($dotNotation, $array);	
-	}
-
-
-	public static function exists($needle, array $array)
-	{
-		// var_dump($needle[0],$needle, isset($needle[0]) && array_key_exists(0, $needle));
-		return self::findArrayElement($needle, $array, true);
+		return self::parserAndConfigure($dotNotation, $array);	
 	}
 
 
 	/**
-	 * Econtrar a partir da chave
+	 * Verificar se existe chave /ou chave=>value
+	 * @param type $needle "chave"/ou grupo de "chave" de chaves a ser verificado;  "chave:value"/ou grupo de "chave:value" a ser verificado; ou misto @example 'main.name'; array('main.name', 'main.type'); array('main.name'=>'Antonio', 'main.type'=>'orange'); array('main.name', 'main.type'=>'orange')
+	 * @param array $array  Array base
+	 * @return bool TRUE caso exista doas as chaves setadas, FALSE caso ao contrario
+	 */
+	public static function exists($needle, array $array)
+	{
+		// var_dump($needle[0],$needle, isset($needle[0]) && array_key_exists(0, $needle));
+		return self::parserAndConfigure($needle, $array, 'exists');
+	}
+
+
+	/**
+	 * Analizar e configurar, usando algum metodo
 	 * @param type $needle String/Array das chaves a ser buscada
 	 * @param array $array Array a ser consultado
-	 * @param type|null $methodExists TRUE ativa o metodo Exists, sua saida sera BOOL, FALSE percorre normalmente
+	 * @param string $method Definir o tipo de metodo a ser usado; Default get. Aceito: get; exists; update; remove; add
 	 * @return array|bool  Array dos elementos encontrados ou BOOL caso o argumento $methodExists for TRUE
 	 */
-	private static function findArrayElementKey($needle, array $array, $methodExists=true)
+	private static function parserAndConfigure($needle, array $array, $method='get')
 	{
 		$hasValue;
 		$result = [];
-		$array = $array;
-
-		$isArray = is_array($needle);
-		if (!$isArray) {
+		if (!is_array($needle)) {
 			$needle = [$needle];
 		}
  		
-		foreach ($needle as $key) {
+		foreach ($needle as $key => $value) {
 
-			$content = self::parseAndValiteKey(self::defineOperator($key), $array);
-			
-			$result[] = $content;
+			if (is_numeric($key)) { //caso key foir numero, significa que não foi setado o value
+				$k = $value;
+				$hasValue = false;
+			} else {
+				$k = $key;
+				$hasValue = true;
+			}
 
-			if($methodExists) {
+			$content = self::parseAndValiteKey(self::defineOperator($k), $array);
+			// var_dump($content);//debug
+
+			if ($method == 'get') $result[] = $content;
+
+			elseif ($method == 'exists') {
 				if (empty($content)) return false;
+				elseif ($hasValue) {
+					if (!is_array($content) || is_array($content) && !self::inArray($value, $content)) return  false;
+				}
 				// if ($content == null) return false;
 			}
 		}
-		if ($methodExists) return true;
-		return $result;
+
+		// outset ===
+		// ==========
+		if ($method == 'get') return array_filter($result);
+		elseif ($method == 'exists') return true;
+	}
+
+
+	/**
+	 * Alternativa multidimencional|Recursivo da função in_array.
+	 * Checar se o valor existe na array
+	 * @param string|array $needle valor a ser procurado, pode ser um grupo (ARRAY) de string. @example 'value' ou array('value', 'value2', 'value3', '...')
+	 * @param type $haystack Array a ser consultada
+	 * @param type|bool $strict TRUE ativa a comparação FORÇADA, checa também o tipo de $needle em $haystack
+	 * @return bool TRUE caso seja encontrado, FALSE caso ao contrário
+	 */
+	private static function inArray($needle, $haystack, $strict=false, &$result=0) 
+	{
+		if (is_array($needle)) {
+			foreach ($needle as $value) {
+				if(self::inArray($value, $haystack, $strict, $result)) $result++;
+				else $result--;
+
+				var_dump($result);//debug
+			}
+			return $result === count($needle);
+		}
+
+
+		foreach ($haystack as $element) {
+			if (($strict ? $element === $needle : $element == $needle) || (is_array($element) && self::inArray($needle, $element, $strict)) )  return true;
+		}
+		return false;
+
+		
+		
 	}
 
 
@@ -107,15 +156,14 @@ class accessArrayElement
 			array_shift($keys);
 			$before = $array;
 			//+ determina que o que vier imediatamente antes dele deve aparecer 1 ou mais vezes na expressão.
-			if ($key === '+') {
+			if ($key == '[?]' || $key == '[+]' || $key === '(+)' || $key == '(?)') { // este modo é mais rapido que in_array()
 				foreach ($before as $k => $v) {
 					if(is_array($v)) {
-						$newArr[$k] = self::parseAndValiteKey($keys, $v);
-						// var_dump($newArr[$k]);
-						if(is_null($newArr[$k])) unset($newArr[$k]);
+						$newArr[] = self::parseAndValiteKey($keys, $v);
+						// if(empty(var)($newArr[$k])) unset($newArr[$k]);
 					}
 				}
-				return $newArr;
+				return array_filter($newArr);
 			}
 
 			if (!is_array($array) || !isset($array[$key])) return null;

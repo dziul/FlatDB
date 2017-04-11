@@ -41,7 +41,7 @@ class accessArrayElement
 	/**
 	 * Obter o valor procurado em $array por $string
 	 * @package self::parserAndConfigure
-	 * @param string $dotNotation  String contendo o padrao DOT NOTATION @example master.people.name 
+	 * @param string $dotNotation  String/Grupo contendo o padrao DOT NOTATION @example master.people.name ; array('master.people.name', 'master.city', ...) 
 	 * @param array $array Array a ser consultado
 	 * @return mixed  valor encontrado em $array por $string ou NULL caso ao contrario
 	 */
@@ -51,16 +51,21 @@ class accessArrayElement
 	}
 
 
+	public static function inset(array $keyAndValue, array &$array)
+	{
+		return self::parserAndConfigure($keyAndValue, $array, 'inset');
+	}
+
 	/**
 	 * Verificar se existe chave /ou chave=>value
 	 * @param type $needle "chave"/ou grupo de "chave" de chaves a ser verificado;  "chave:value"/ou grupo de "chave:value" a ser verificado; ou misto @example 'main.name'; array('main.name', 'main.type'); array('main.name'=>'Antonio', 'main.type'=>'orange'); array('main.name', 'main.type'=>'orange')
 	 * @param array $array  Array base
 	 * @return bool TRUE caso exista doas as chaves setadas, FALSE caso ao contrario
 	 */
-	public static function exists($needle, array $array)
+	public static function exist($needle, array $array)
 	{
 		// var_dump($needle[0],$needle, isset($needle[0]) && array_key_exists(0, $needle));
-		return self::parserAndConfigure($needle, $array, 'exists');
+		return self::parserAndConfigure($needle, $array, 'exist');
 	}
 
 
@@ -89,25 +94,100 @@ class accessArrayElement
 				$hasValue = true;
 			}
 
-			$content = self::parseAndValiteKey(self::defineOperator($k), $array);
+			$content = self::parseAndGenerate(self::defineOperator($k), $array, $method, $value);
 			// var_dump($content);//debug
 
 			if ($method == 'get') $result[] = $content;
-
-			elseif ($method == 'exists') {
+			elseif ($method == 'exist') {
 				if (empty($content)) return false;
 				elseif ($hasValue) {
 					if (!is_array($content) || is_array($content) && !self::inArray($value, $content)) return  false;
 				}
-				// if ($content == null) return false;
 			}
+			// elseif ($method == 'inset') {}
+			elseif ($method == 'unset') {
+				
+			}
+			elseif ($method == 'change') {
+				
+			}
+			
+
 		}
+
 
 		// outset ===
 		// ==========
-		if ($method == 'get') return array_filter($result);
-		elseif ($method == 'exists') return true;
+		if ($method == 'get') {
+			return array_filter($result);
+		}
+		elseif ($method == 'exist') {
+			return true;
+		}
+		elseif ($method == 'inset') {
+			return $content;
+		}
+		elseif ($method == 'unset') {
+
+		}
+		elseif ($method == 'change') {
+
+		}
+
 	}
+
+
+
+
+
+	/**
+	 * Analizar e validar a chave
+	 * Procurar em $array por $keys
+	 * @param array $needle Array contendo as chaves a ser procurada e percorridas 
+	 * @param array $haystack Array de entrada
+	 * @param string $method Defini o metodo a ser usado
+	 * @param string $value Argumento apenas usado para passar o valor de $keys, para os metodos change; unset; set
+	 * @return mixed  Retorna o valor da chave analizada e validada ou NULL caso ao contrario
+	 */
+	private static function parseAndGenerate(array $keys, array $array, $method='get', $value='')
+	{
+		$newArr = [];//init
+		foreach ($keys as $key) {
+			array_shift($keys);
+			$before = $array;
+			//+ determina que o que vier imediatamente antes dele deve aparecer 1 ou mais vezes na expressão.
+			if ($key == '[?]' || $key == '[]' || $key == '[+]') { // este modo é mais rapido que in_array()
+				foreach ($before as $k => $v) {
+					// var_dump($value);
+					if(is_array($v)) {
+						$newArr[] = self::parseAndGenerate($keys, $v, $method, $value);
+						// if(empty(var)($newArr[$k])) unset($newArr[$k]);
+					}
+				}
+				return array_filter($newArr);
+			}
+
+
+			if ($method === 'inset') {
+				if (empty($value)) throw new accessArrayException('method::inset, Nao ha Valor para ser adicionado');
+				
+				if(is_array($array) && !isset($array[$key])) {
+					$array[$key] = $value;
+					// var_dump($array);
+					continue;
+				}	
+			}
+			elseif (!is_array($array) || !isset($array[$key])) return null;
+			$array = $array[$key];
+		}
+
+
+
+		return $array;
+
+	}
+
+
 
 
 	/**
@@ -134,51 +214,7 @@ class accessArrayElement
 		foreach ($haystack as $element) {
 			if (($strict ? $element === $needle : $element == $needle) || (is_array($element) && self::inArray($needle, $element, $strict)) )  return true;
 		}
-		return false;
-
-		
-		
+		return false;		
 	}
-
-
-	/**
-	 * Analizar e validar a chave
-	 * Procurar em $array por $keys
-	 * @param array $needle Array contendo as chaves a ser procurada e percorridas 
-	 * @param array $haystack Array de entrada
-	 * @param string $method Defini o metodo a ser usado
-	 * @return mixed  Retorna o valor da chave analizada e validada ou NULL caso ao contrario
-	 */
-	private static function parseAndValiteKey(array $keys, array $array, $method='get')
-	{
-		$newArr = [];//init
-		foreach ($keys as $key) {
-			array_shift($keys);
-			$before = $array;
-			//+ determina que o que vier imediatamente antes dele deve aparecer 1 ou mais vezes na expressão.
-			if ($key == '[?]' || $key == '[+]' || $key === '(+)' || $key == '(?)') { // este modo é mais rapido que in_array()
-				foreach ($before as $k => $v) {
-					if(is_array($v)) {
-						$newArr[] = self::parseAndValiteKey($keys, $v);
-						// if(empty(var)($newArr[$k])) unset($newArr[$k]);
-					}
-				}
-				return array_filter($newArr);
-			}
-
-			if (!is_array($array) || !isset($array[$key])) return null;
-			$array = $array[$key];
-		}
-
-
-
-		return $array;
-
-	}
-
-
-
-
-
 
  }//END class

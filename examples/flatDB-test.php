@@ -95,8 +95,19 @@ $arr = [
 
 
 
-var_dump(accessArrayElement::get(['main.[+].description', 'main.[+].id'], $arr));
-
+// var_dump(accessArrayElement::get(['main.[+].description', 'main.[+].id'], $arr));
+// var_dump(accessArrayElement::exist(['main.[+].description', 'main.[+].id'], $arr));
+$addARR = [
+	'item' => [
+		'litmus v20',
+		'life go go'
+	]
+];
+// $addARR = [
+// 	'item.[]' => 'litmus Master',
+// 	'item.[]' => 'life or death'
+// ];	
+var_dump(accessArrayElement::inset(['main.[+].id' => $addARR], $arr), $arr);
 
 
 

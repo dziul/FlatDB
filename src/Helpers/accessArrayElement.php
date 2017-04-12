@@ -4,6 +4,7 @@ namespace darkziul\Helpers;
 
 /**
  * A simple and secure helper to manipulete Array in various ways via dot notation
+ * PHP dot notation array access
  * @author Luiz Carlos Wagner
  * @license MIT
  **/
@@ -104,14 +105,9 @@ class accessArrayElement
 					if (!is_array($content) || is_array($content) && !self::inArray($value, $content)) return  false;
 				}
 			}
-			// elseif ($method == 'inset') {}
-			elseif ($method == 'unset') {
-				
-			}
-			elseif ($method == 'change') {
-				
-			}
-			
+				elseif ($method == 'inset') {}
+			elseif ($method == 'unset') {}
+			elseif ($method == 'change') {}
 
 		}
 
@@ -164,24 +160,24 @@ class accessArrayElement
 						// if(empty(var)($newArr[$k])) unset($newArr[$k]);
 					}
 				}
+				// var_dump($newArr);//
 				return array_filter($newArr);
 			}
 
 
 			if ($method === 'inset') {
+
 				if (empty($value)) throw new accessArrayException('method::inset, Nao ha Valor para ser adicionado');
-				
-				if(is_array($array) && !isset($array[$key])) {
+				if(is_array($array) && !isset($array[$key])	) {
 					$array[$key] = $value;
-					// var_dump($array);
 					continue;
-				}	
+				}
+				
 			}
 			elseif (!is_array($array) || !isset($array[$key])) return null;
+			// var_dump($key);
 			$array = $array[$key];
 		}
-
-
 
 		return $array;
 
@@ -204,12 +200,10 @@ class accessArrayElement
 			foreach ($needle as $value) {
 				if(self::inArray($value, $haystack, $strict, $result)) $result++;
 				else $result--;
-
-				var_dump($result);//debug
+				// var_dump($result);//debug
 			}
 			return $result === count($needle);
 		}
-
 
 		foreach ($haystack as $element) {
 			if (($strict ? $element === $needle : $element == $needle) || (is_array($element) && self::inArray($needle, $element, $strict)) )  return true;

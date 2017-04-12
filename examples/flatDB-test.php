@@ -2,8 +2,8 @@
 
 require 'autoload.php';
 
-use darkziul\Helpers\accessArrayElement as accessArrayElement;
-use darkziul\Helpers\accessArrayElementUseEval as accessArrayElementUseEval;
+use darkziul\Helpers\dotNotationArrayAccess as Arr;
+// use darkziul\Helpers\accessArrayElementUseEval as accessArrayElementUseEval;
 use darkziul\flatDB;
 
 // $accessAE = new accessArrayElement();
@@ -94,20 +94,38 @@ $arr = [
 ];
 
 
-
-// var_dump(accessArrayElement::get(['main.[+].description', 'main.[+].id'], $arr));
-// var_dump(accessArrayElement::exist(['main.[+].description', 'main.[+].id'], $arr));
-$addARR = [
-	'item' => [
-		'litmus v20',
-		'life go go'
-	]
+$arr = [
+	'main' => [
+		[
+			'category' => [
+					'code' => microtime(true),
+					'name' => 'Lima',
+					'tag' => ['ok2','ok5','ok784']
+				],
+			'city' => 'rio de janeiro'
+		],
+		[
+			'category' => [
+					'code' => 'm__' . microtime(true),
+					'name' => 'Pedro',
+					'tag' => ['not2784','not7845','not54']
+				],
+			'city' => 'Sao Paulo'
+		],
+		'category' => 'falsiane',
+		'category'
+]
 ];
+
+// var_dump((array)'ok');
+var_dump(Arr::get($arr, ['main.[+].category', 'main.[+].[+].code', 'main.[+].[+].code']));
+// var_dump(Arr::exist($arr, 'main.[+].description'));
+
 // $addARR = [
 // 	'item.[]' => 'litmus Master',
 // 	'item.[]' => 'life or death'
 // ];	
-var_dump(accessArrayElement::inset(['main.[+].id' => $addARR], $arr), $arr);
+// var_dump(Arr::inset(['main.0.ids.test.lima.ok' => $addARR], $arr));
 
 
 
@@ -123,7 +141,7 @@ var_dump(accessArrayElement::inset(['main.[+].id' => $addARR], $arr), $arr);
 // $limit = 10000;
 // $begin = microtime(true);
 // for ($i=0; $i < $limit; $i++) { 
-// 	test('+',1);
+// 	Arr::get($arr, 'main.[+].category');
 // }
 // $end = microtime(true);
 // var_dump($end - $begin);

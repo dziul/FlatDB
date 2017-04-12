@@ -28,42 +28,136 @@ class dotNotationArrayAccess
 	private static $notFoundMessage = 'NOT_FOUND';
 
 	/**
-	 * Definir o operador
+	 * Converte dot em array
 	 * @param string $dot String not notation @example main.category.name ;  main.[+].name 
 	 * @return array
 	 */
-	public static function dot($dot)
+	public static function dotToArray($dot)
 	{
 		return explode('.', $dot);
 	}
 
 
+	public static function exists(array $array, $key, $value)
+	{
 
-	public static function get(array $array, $keys=null)
+
+		self::getOrange($array, self::dotToArray($key));
+
+	}
+	/**
+	 * Obter
+	 * @param array $array Array base
+	 * @param type|null $keys chave/chaves de busca
+	 * @param type|bool $getKeyName TRUE o resultado terá o nome da chave <code>['main.code' => 15]</code>, FALSE não mostrrá o nome <code>[0 => 15]</code>
+	 * @return Mi
+	 */
+	public static function get(array $array, $keys=null, $getKeyName=false)
 	{
 		if (!isset($keys)) return $array;
 		$keys = (array) $keys;
 		$count = count($keys);
 		$result = [];
 		foreach ($keys as $key) {
-			$result[] = self::__get__($array, self::dot($key));
+			if ($getKeyName) $result[$key] = self::__get__($array, self::dotToArray($key));
+			else $result[] = self::getOrange($array, self::dotToArray($key));
+			
 		}
 
-		return ($count-1) ? $result : $result[0];
+
+		return  (($count-1) || $getKeyName) ?  $result : $result[0];
+		// return array_filter($result);
 	}
 
-	private static function __get__(array $array, $key, $recursive=false)
+	/**
+	 * Inserir conteudo
+	 * @param type &$array 
+	 * @param type $keys 
+	 * @param type|null $value 
+	 * @param type|bool $stringIgnore TRUE Caso o seletor for string irá convete o valor em array e add o elemento de $value, Força a adição em string. FALSE igora string
+	 * @return type
+	 */
+	public static function set(&$array, $keys, $value=null, $stringIgnore=false)
 	{
-		
+
+		if (is_array($keys)) {
+			foreach ($keys as $key => $value) {
+				$data = self::set($array, $key, $value);
+			}
+		} else {
+			$data = self::setOrange($array, self::dotToArray($keys), $value, $stringIgnore,false);
+		}
+
+		return $data;
+
+	}
+
+	private static function setOrange( array &$array, array $keys, $value=null, $stringIgnore=false, $notSetExists=true)
+	{
+
+		$count = count($keys)-1;
+
+		for ($i=0; $i < $count; $i++) { 
+			$index = $keys[$i];
+
+
+			if ($notSetExists && isset($array[$index])) return false;
+
+
+			if ($index === '[+]') {
+				$keysNew = array_slice($keys, $i+1); // pula a o proximo valor/chave
+				foreach ($array as $_k => $_v) {
+
+					if (is_array($_v)) {
+
+						self::setOrange($array[$_k], $keysNew, $value);	
+
+					} elseif ($stringIgnore) {
+
+						$array[$_k] = [];
+						$array[$_k][] = $_v;
+						self::setOrange($array[$_k], $keysNew, $value);	
+
+					}
+				}
+				return $array;
+			}
+
+			//caso não exista ou não seja uma array cria um vazio para dar continuidade
+			if (!isset($array[$index]) || !is_array($array)) {
+				$array[$index] = [];
+			}
+
+			$array = &$array[$index];
+		}
+
+
+		$array[$keys[$i]] = $value;
+		return $array;
+
+	}
+
+	/**
+	 * "Laranja" de get()
+	 * @param array $array 
+	 * @param type $key 
+	 * @param type|bool $recursive 
+	 * @return type
+	 */
+	private static function getOrange(array $array, $key, $recursive=false, $valueCompare=null)
+	{
+
+
 		foreach ($key as $index => $k) {
 			// array_shift($key);
 
 			if ($k === '[+]') {
 				$pos = array_slice($key, $index+1);
 				$result = [];
+
 				foreach ($array as $_v) {
 					if(is_array($_v)) {
-						$data = self::__get__($_v, $pos, true);
+						$data = self::getOrange($_v, $pos, true);
 						$result[] = (is_array($data) && isset($data[0])) ? $data[0] : $data;
 					}
 
@@ -78,6 +172,8 @@ class dotNotationArrayAccess
 			$array  =  $array[$k];
 			// var_dump($array); 
 		}
+
+
 
 		return $array;
 

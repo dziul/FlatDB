@@ -63,7 +63,8 @@ class dotNotationArrayAccess
 				$result = [];
 				foreach ($array as $_v) {
 					if(is_array($_v)) {
-						$result[] = self::__get__($_v, $pos);
+						$data = self::__get__($_v, $pos, true);
+						$result[] = (is_array($data) && isset($data[0])) ? $data[0] : $data;
 					}
 
 				}

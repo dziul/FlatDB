@@ -108,7 +108,7 @@ $arr = [
 			'category' => [
 					'code' => 'm__' . microtime(true),
 					'name' => 'Pedro',
-					'tag' => ['not2784','not7845','not54']
+					'tag' => ['not2784','not7845','not54', 'sub'=>'true']
 				],
 			'city' => 'Sao Paulo'
 		],
@@ -118,7 +118,7 @@ $arr = [
 ];
 
 // var_dump((array)'ok');
-var_dump(Arr::get($arr, ['main.[+].category', 'main.[+].[+].code', 'main.[+].[+].code']));
+var_dump(Arr::get($arr, ['main.[+].category', 'main.[+].[+].code', 'main.[+].[+].[+].sub']));
 // var_dump(Arr::exist($arr, 'main.[+].description'));
 
 // $addARR = [

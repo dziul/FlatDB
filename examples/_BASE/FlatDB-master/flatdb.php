@@ -157,7 +157,7 @@ class FlatDB
 
         // add the id key to the object to be inserted
         
-        $obj['id'] = if(empty($ID)) ? $id : $ID;
+        $obj['id'] = (empty($ID)) ? $id : $ID;
 
         // create new file
         $this->write($table . '/entry_' . $id . '.php', $obj);

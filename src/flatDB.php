@@ -2,7 +2,7 @@
 
 namespace darkziul;
 
-use darkziul\Helpers\accessArrayElement;
+use darkziul\Helpers\dotNotationArrayAccess as DNAA;
 use darkziul\Helpers\directory;
 use \Exception as Exception;
 
@@ -16,15 +16,22 @@ use \Exception as Exception;
 class flatDB
 {
 	/**
-	 * @var obj
+	 * @var array
 	 */
-	private $query;
+	private $query = [
+		'table' => null,
+		'where' => null,
+		'order' => ['by' => 'id', 'type' => 'desc'],
+		'limit' => 0,
+		'offset' => 0,
+		'select' => null
+	];
 
 	/**
 	 * var responsabel pelas info do db
-	 * @var obj
+	 * @var array
 	 */
-	private $db;
+	private $db = [];
 
 	
 	/**
@@ -42,43 +49,39 @@ class flatDB
 	/**
 	 * @var string
 	 */
-	private $metaBaseName	 = '__meta.php';
+	private $metaBaseName	 = '.metadata.php';
 
 	/**
 	 * armazenar conteudo para ser executado
 	 * @var array
-	 * 
-	 * [method]
-	 * [id]
-	 * [content]
-	 * [meta]
-	 * 
 	 */
-	private $execute = ['method' => null, 'id' => null, 'content' => null, 'meta' => null];
-	private $executeBackup;
+	private $prepare = [
+		'method' => null,
+		'id' => 0,
+		'data' => null,
+		'meta' => null
+	];
 	/**
 	 * Prefixo do cache
 	 * @var string
 	 */
-	private $prefixCache = '0.cache.';
+	private $cacheNameDir = '.cache';
 
+
+	private static $accessArray;
 
 	/**
 	 * construtor
-	 * @param string|null $dirInit  caminho do diretiro
+	 * @param string|null $dirInit  Diretorio do armazenamento dos arquivos
 	 * @return type
 	 */
 	public function __construct($dirInit = null) {
 
-		$this->executeBackup = $this->execute;
 		$this->directoryInstance = new directory();
 
-		$this->db = new dbQuery();//instanciar class que guarda info do DB	
-
-
-		$nameDataDBdefault = '__dataflatdb';
-		$this->db->basePath = is_null($dirInit) ? $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/' . $nameDataDBdefault .  hash('crc32b', $nameDataDBdefault) . '.storage/' : $dirInit;
-		$this->directoryInstance->create($this->db->basePath);//cria o dir
+		$nameDataDBdefault = '__data.flatdb';
+		$this->db['basePath'] = is_null($dirInit) ? $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/' . $nameDataDBdefault . '.storage/' : $dirInit;
+		$this->directoryInstance->create($this->db['basePath']);//cria o dir
 
 
 		$this->strlenDenyAccess = strlen($this->strDenyAccess); //calcular o tamanho da string
@@ -103,10 +106,10 @@ class flatDB
 	 */
 	private function getDbPath($dbName, $dbPath=null)
 	{
-		// if (empty($dbName)) $dbName = $this->db->name; //pegaNameDefault
+		// if (empty($dbName)) $dbName = $this->db['name']; //pegaNameDefault
 		$dbName = $this->getDbName($dbName);//formatar nome
 
-		if (empty($dbPath)) return $this->db->basePath . $dbName . '/'; //Folder default
+		if (empty($dbPath)) return $this->db['basePath'] . $dbName . '/'; //Folder default
 		else  return $dbPath . '/' . $dbName . '/';
 	}
 
@@ -121,10 +124,11 @@ class flatDB
 	{
 		if (!$this->dbExists($dbName)) throw new Exception(sprintf('Nao existe a tabela "%s".', $dbName));
 
-		$this->db->instantiated = true; // set instantiated
-		$this->db->name = $dbName;//set name
-		$this->db->path =  $this->getDbPath($dbName);//set path
-		// $this->who = 'db'; //indentificar para utilizar no encadeamento
+		// $this->db['basePath']
+		$this->db['instantiated'] = true; // set instantiated
+		$this->db['name'] = $dbName;//set name
+		$this->db['path'] =  $this->getDbPath($dbName);//set path
+
 		//Encadeamento | chaining
 		return $this;
 	}
@@ -182,9 +186,9 @@ class flatDB
 	 */
 	public function tableShow($jsonOUT = false)
 	{
-		if (!$this->db->instantiated) throw new Exception('Nao ha nenhum DB setado!');
+		if (!$this->db['instantiated']) throw new Exception('Nao ha nenhum DB setado!');
 
-		$data = $this->directoryInstance->showFolders($this->db->path);
+		$data = $this->directoryInstance->showFolders($this->db['path']);
 
 		if ($jsonOUT) return json_encode($data);//string json
 		return $data;//array
@@ -200,14 +204,20 @@ class flatDB
 	 */
 	public function table($name, $create=false)
 	{
-		if (!$this->db->instantiated) throw new Exception('Nao existe DataBase selecionado!');
+		if (!$this->db['instantiated']) throw new Exception('Nao ha database para consulta!');
 
-		// $this->who = 'table';
-		if(!$this->tableExists($name) && $create) $this->tableCreate($name);
+		if (!$this->tableExists($name) && $create) $this->tableCreate($name);
 		elseif (!$this->tableExists($name)) throw new Exception(sprintf('Nao existe a tabela "%s"', $name));
-		
 
-		$this->query = new tableQuery($name, $this->getTablePath($name));
+		// set query =====
+		// ===============
+		$this->query['table'] = $name;
+		$this->query['tablePath'] = $this->getTablePath($name);
+		$this->query['where'] = [];
+		$this->query['order'] = ['by'=>'id', 'type'=>'desc'];
+		$this->query['limit'] = 0;
+		$this->query['offset'] = 0;
+		$this->query['select'] = null;
 
 		return $this;
 	}
@@ -223,8 +233,10 @@ class flatDB
 		
 
 		$path = $this->getTablePath($name);
+		$this->query['tablePath'] = $path;// antecipar set
+
 		if( !$this->directoryInstance->create($path) ) throw new Exception(sprintf('Não foi possível crear o diretorio da Tabela: "%s"!', $path));
-		// return $this->write($path . 'index.php','',false); //criar um index apenas com o codigo de 404
+		$this->directoryInstance->create($this->getPathCache());//criar a pasta cache
 		return true;
 	}
 
@@ -260,7 +272,7 @@ class flatDB
 	private function getTablePath($name)
 	{
 		$name  =  $name . '.' . $this->simplesHash($name) . '.tb';
-		return $this->db->path . $name . '/';
+		return $this->db['path'] . $name . '/';
 	}
 
 
@@ -273,68 +285,78 @@ class flatDB
 	 * @param  mixed $nameID Caso seja necessario ADICIONAR um ID personalizado.
 	 * @return this
 	 */
-	public function insert(array $array, $nameID=null)
+	public function insert(array $array)
 	{
-		if (!empty($nameID) && strlen(''.$nameID) < 3 ) throw new Exception(sprintf('"%s" precisa ter no minimo 3 caracteres', $nameID));
-		if (!isset($this->query->table)) throw new Exception('Nao ha tabela para consulta');
-
-
 		$id = 1;
-		$meta = [];//
+		$meta = [];
+
 		if (!$this->hasMeta()) {
-			$meta['last_id'] = !empty($nameID) ? $nameID : $id;
 			$meta['length'] = $id;
 		} else {
-
-
 			$meta = $this->getMeta();
-			$indexesFlip = array_flip($meta['indexes']);
 			$meta['length'] = count($meta['indexes'])+1;
-			$id = end($indexesFlip)+1;
+			$id = end($meta['indexes'])+1;
 		}
 
-
-		// caso $nameID ja tenha sido setado em metaDATA executa o outset "precoce"
-		if ($this->hasMeta() && !empty($nameID) && in_array($nameID, $meta['indexes'])) return $this;
-
-		$meta['indexes'][$id] = !empty($nameID) ? $nameID : $id;
-		$meta['indexes_flip'] = array_flip($meta['indexes']); // adicionar o indexes inversos
-		$meta['last_id'] = end($meta['indexes']);
-		$array['id'] = $meta['indexes'][$id];
-
-		
-		$this->execute['meta'] = $meta; //set execute ==
-		$this->execute['id'] = !empty($nameID) ? $nameID : $id;
-		$this->execute['content'] = $array;
-		$this->execute['method'] = 'insert';
+		$array['id'] = $id;
+		$meta['lastId'] = $id;
+		$meta['indexes'][$id] = $id;
 
 
-		//encadeamento
+		// execute data ==========
+		$this->prepareSet('insert', DNAA::create($array), $id, $meta);
+
+		return $this;//encadeamento
+	}
+
+
+	/**
+	 * Colocar/Adicionar  Chave e valor ou apenas chave
+	 * @param type $newContent Caso seja conjunto de chave&valor, se ja exitir a chave o valor sera mesclado com o existente.
+	 * @return this
+	 */
+	public function put($newContent)
+	{
+		$this->prepareSet('put', $newContent); //nesse caso sera salvo o conteudo a ser adicionado em 'data'
 		return $this;
+	}
+	public function remove($keys)
+	{
+		
 	}
 
 
 
-	public function add(array $array)
+	/**
+	 * Deletar arquivo(item)
+	 * @param number|null $id Id a ser deletado ou nao setar para ser usado no metodo WHERE 
+	 * @return this
+	 */
+	public function delete($id=null) 
 	{
+		if (is_null($id)) {
+			$this->prepareSet('deleteByWhere');
+		}
+		else $this->prepareSet('deleteById', null, (array)$id);	
+		return $this; //encadeamento
+	}
 
-		
-		// $this->execute['meta'] = null; //set execute ==
-		// $this->execute['id'] = $id;
-		$this->execute['content'] = $array;
-		$this->execute['method'] = 'add';
+	public function select($key=null)
+	{
+		$this->query['select'] = (array)$key;
+
+		$this->prepareSet('select');
 
 		return $this;
 	}
 
-	public function remove($id=null) 
+	/**
+	 * Obter todos os itens
+	 * @return array
+	 */
+	public function all()
 	{
-		$this->execute['meta'] = $this->getMeta(); //set execute ==
-		$this->execute['id'] = is_array($id) ? $id: [$id];
-		$this->execute['content'] = null;
-		$this->execute['method'] = 'remove';
-
-		return $this;
+		return $this->parseAndSelect();
 	}
 
 
@@ -344,147 +366,266 @@ class flatDB
 	 */
 	public function execute()
 	{
-		$executed = false;
-		if ('insert' === $this->execute['method']) {
-			$this->writeMeta($this->execute['meta']);
-			$this->write($this->getPathFile($this->execute['id']), $this->execute['content'], false);
-
-			$executed = true; // executado
-		}
-
-		elseif ('add' === $this->execute['method']) {
-
-			
-			// $this->execute['id'] = $id;
-			$contentAdd = $this->execute['content']; // conteudo para adicionar
-			$whereCompare = $this->query->where;
-			var_dump($contentAdd, $whereCompare);
-
-
-			$executed = true; // executado
-		}
-
-		if ('remove' === $this->execute['method']) {
+		if (!$this->query['table']) throw new Exception('Nao ha tabela para consulta');
 		
+		$executed = false;
+		if ('insert' === $this->prepareGet('method')) {
+			$this->writeMeta($this->prepareGet('meta'));
+			$data = $this->prepareGet('data');
+			$this->write($this->getPathFile($this->prepareGet('id')), $data, false);
 
-			foreach ($this->execute['id'] as $id) {
-
-				if (!$this->fileExists($id)) throw new Exception(sprintf('Nao foi encontrado arquivo ID::%s', $id));
-				
-
-				if (in_array($id, $this->execute['meta']['indexes'])) {
-
-					$key = $this->execute['meta']['indexes_flip'][$id];
-					unset($this->execute['meta']['indexes'][$key]);
-
-					unlink($this->getPathFile($id));
-					$this->execute['meta']['length']--; // igual a $e -= $e
-				} else {
-
-					throw new Exception(sprintf('ID::%s nao foi encontrado no metaData::indexes', $id));
-				}
-
-
-			}
-
-			// $this->execute['meta']['length'] = count($this->execute['meta']['indexes']);
-			$this->execute['meta']['last_id'] = end($this->execute['meta']['indexes']); // pegar ultima chave
-			$this->writeMeta($this->execute['meta']);//salvar novos dados
-			
-			$executed = true;//executado metodo, finalizar
+			$this->prepareReset(); // reseta array prepare
+			$this->removeCacheAll(); //remover todos os caches
+			return $data;
 		}
+		elseif ('put' === $this->prepareGet('method')) {
+			$data = $this->parseAndPut($this->prepareGet('data'));
+			$this->prepareReset(); // reseta array prepare
+			$this->removeCacheAll(); //remover todos os caches
+			return $data;
 
-
-		if ($executed) {
-			$this->execute = $this->executeBackup;//reset var
-			$this->removeCache();// remove todo os cache 
-			return true;//
+		}
+		elseif ('select' === $this->prepareGet('method')) {
+			$this->prepareReset(); // reseta array prepare
+			return $this->parseAndSelect();
+		}
+		elseif ('deleteById' === $this->prepareGet('method')) {
+			$this->prepareReset(); // reseta array prepare
+			return $this->parseAndDelete($this->prepareGet('id'));
+		}
+		elseif ('deleteByWhere' === $this->prepareGet('method')) {
+			$this->prepareReset(); // reseta array prepare
+			return $this->parseAndDeleteWithCondition();
 		}
 		else return null;
 
 	}
 
 
-	private function findAll()
-	{
-		if (!isset($this->query->table)) throw new Exception('Nao ha tabela para consulta');
-		
-		// $table  = $this->query->table;
-		$tablePath  = $this->query->tablePath;
-        $order  = $this->query->order;
-        $limit  = $this->query->limit;
-        $offset = $this->query->offset;
-        $where  = $this->query->where;
-        $select = $this->query->select;
-
-
-        $hash=  sha1(json_encode($order+$where+$select) . $limit . $offset);
-        $cacheName = $this->prefixCache . $hash;
-        $cachePath = $this->getPathFile($cacheName);
-
-
-        if ($this->fileExists($cacheName)) return $this->read($cachePath, false);
-
-        if (!$this->hasMeta()) throw new Exception('Nao ha arquivo metaData para consulta');
-
-        $meta = $this->getMeta();
-
-        if (empty($meta['indexes'])) return null;//
-
-        if ('DESC' == $order['type']) krsort($meta['indexes']);
-        else ksort($meta['indexes']);
-
-
-	}
-
-
-
-
-	private function parser($content, $compare=null, $method=null)
-	{
-
-		
-	}
-
 
 	/**
-	 * Gerar o caminho do arquivo
-	 * @param type $id ID
-	 * @return string retorna a string caminho montada
+	 *Analizar  e Ordenar
+	 * @param array &$array 
+	 * @param array|null $order NULL utiliza a variavel ja setada 
+	 * @return array Retorna array ordenada
 	 */
-	private function getPathFile($id)
+	private function parseAndOrder(array &$array, array $order=null)
 	{
-		return $this->query->tablePath . $this->simplesHash($id)  . 'k' . $id . '.php';
+
+		if(is_null($order)) $order = $this->query['order'];
+		// ordernar padrao ===
+        if ('desc' == $order['type'] && 'id' == $order['by']) krsort($array); //decrescente
+        elseif ('asc' == $order['type'] && 'id' == $order['by']) ksort($array); // crescente
+
+        elseif ('asc' == $order['type']) {
+        	$func = function($a, $b) use($order) {
+        		$a = DNAA::get($a, $order['by']);
+        		$b = DNAA::get($b, $order['by']);
+        		if ($a == $b) return 0;
+        		return ($a < $b) ? -1 : 1; //asc
+        		// return ($a > $b) ? -1 : 1; //desc
+        	};
+        	uasort($array, $func);
+        }
+        elseif ('desc' == $order['type']) {
+        	$func = function($a, $b) use($order) {
+        		$a = DNAA::get($a, $order['by']);
+        		$b = DNAA::get($b, $order['by']);
+
+        		if ($a == $b) return 0;
+        		// return ($a < $b) ? -1 : 1; //asc
+        		return ($a > $b) ? -1 : 1; //desc
+        	};
+        	uasort($array, $func);
+        }
+
+        return $array;
 	}
 
-	private function fileExists($nameFile)
+	/**
+	 * Analizar e Selecionar
+	 * @return array
+	 */
+	private function parseAndSelect()
 	{
-		return file_exists($this->getPathFile($nameFile));
+		if (!isset($this->query['table'])) throw new Exception('Nao ha tabela para consulta');
+		
+        $order  	= $this->query['order'];
+        $where  	= $this->query['where'];
+        $select 	= $this->query['select'];
+        $offset 	= $this->query['offset'];
+    	$limit  	= $this->query['limit'];
+
+    	$result = [];//init result
+        $cacheName =  sha1(json_encode((array)$where + (array)$select));
+        // BEGIN caso exista cache ===
+        if ($hasCache = $this->hasCache($cacheName)) {
+        	$result = $this->readCache($cacheName);
+        	// return $result;
+        }
+        //END cao exista cache =======
+        if (!$this->hasMeta()) throw new Exception('Nao ha arquivo metadata para consulta');
+
+        $indexes = $this->getMeta('indexes');
+
+        if (empty($indexes)) return null;//
+
+        // $data = [];// init data
+        //condicao where ====
+        if ($emptyWhere = empty($where) && !$hasCache) {
+        	foreach ($indexes as $id) {
+        		$data = $this->read($this->getBaseNameFile($id));
+        		$result[$id] = empty($select) ? $data : DNAA::get($data, $select, true);
+        	}
+        	
+
+        } elseif (!$emptyWhere && !$hasCache) {
+        	if (isset($where['id'])) {
+        		// $ids = (array)$where['id'];
+        		// var_dump(in_array($ids, $indexes));
+        		// if (!in_array($ids, $indexes)) throw new Exception(sprintf('Nao ha id::%s',implode(',', $ids)));
+        		$indexes = (array)$where['id'];
+        		unset($where['id']);	
+        	}
+        	foreach ($indexes as $id) {
+    			$data = $this->read($this->getBaseNameFile($id));
+    			if (DNAA::exists($data, $where)) $result[$id] = empty($select) ? $data : DNAA::get($data, $select, true);
+    		}
+        }
+
+        if (!$hasCache) $this->writeCache($cacheName, $result);//salvar cache
+
+        $this->parseAndOrder($result, $order);//ordenar
+
+    	if ($limit > 0)  $data = array_slice($result, $offset, $limit, true);
+    	elseif ($offset > 0) $data = array_slice($result, $offset, true);
+        return $result;
+	}
+	
+	/**
+	 * Analizar e colocar Construtor de put()
+	 * @param mixed $newContent
+	 * @param bool $valueMerge TRUE mesclar o valor atual com o existente. caso o existente seja string, sera convertido em array 
+	 * @return bool|null
+	 */
+	private function parseAndPut($newContent, $valueMerge=false)
+	{
+		// $order   = $this->query['order'];
+		$where 	 = $this->query['where'];
+		$indexes = $this->getMeta('indexes');
+		// $result  = [];
+
+		if (empty($indexes)) return null;
+
+		if (empty($where)) {
+			foreach ($indexes as $id) {
+				$file = $this->getBaseNameFile($id);
+				$data = $this->read($file);
+				// $result[$id] = DNAA::put($data, $newContent);// TRUE ira mesclar valor caso ja exista a chave
+				DNAA::put($data, $newContent, $valueMerge);// TRUE ira mesclar valor caso ja exista a chave
+				$this->write($file, $data);
+			}
+		} else {
+			if (isset($where['id'])) {
+        		$indexes = (array)$where['id'];
+        		unset($where['id']);	
+        	}
+			foreach ($indexes as $id) {
+				$file = $this->getBaseNameFile($id);
+				$data = $this->read($file);
+
+				if (DNAA::exists($data, $where)) {
+					// $result[$id] = DNAA::put($data, $newContent);// TRUE ira mesclar valor caso ja exista a chave
+					DNAA::put($data, $newContent, $valueMerge);// TRUE ira mesclar valor caso ja exista a chave
+					$this->write($file, $data);
+				}
+			}
+		}
+
+		// $this->parseAndOrder($result, $order);//ordenar
+		// return $result;
+		return true;
+	}
+
+	/**
+	 * Analizar e deletar
+	 * @param number $ids Id ou array com ids a ser deletado  
+	 * @return number  Retorna quantidade deletada
+	 */
+	public function parseAndDelete($ids)
+	{
+		$meta = $this->getMeta();
+		$deleted = 0;//contabilizar quantidade deletado
+		foreach ($ids as $id) {
+			if (!$this->fileExists($id) && !in_array($id, $meta['indexes'])) throw new Exception(sprintf('Nao foi encontrado o arquivo=id::%s', $id));
+			unset($meta['indexes'][$id]);
+			unlink($this->getPathFile($id));
+			$meta['length']--; //-1
+			$deleted++;
+		}
+		$meta['lastId'] = end($meta['indexes']);
+		$this->writeMeta($meta);
+		$this->removeCacheAll();
+		return $deleted;
+	}
+
+	/**
+	 * Analizar e deletar com condicao (where)
+	 * @return number|null Retorna a quantidade deletada ou NULL algo errado
+	 */
+	private function parseAndDeleteWithCondition()
+	{
+		$where 	 = $this->query['where'];
+		$indexes = $this->getMeta('indexes');
+		$meta = $this->getMeta();
+		$deleted = 0;//contabilizar quantidade deletado
+		if (empty($where) || empty($indexes)) return null;
+
+		if (isset($where['id'])) {
+    		$indexes = (array)$where['id'];
+    		unset($where['id']);	
+    	}
+		foreach ($indexes as $id) {
+			$file = $this->getBaseNameFile($id);
+			$data = $this->read($file);
+			if (DNAA::exists($data, $where)) {
+				if (!$this->fileExists($id) && !in_array($id, $meta['indexes'])) throw new Exception(sprintf('Nao foi encontrado o arquivo=id::%s', $id));
+				unset($meta['indexes'][$id]);
+				unlink($this->getPathFile($id));
+				$meta['length']--; //-1
+				$deleted++;
+			}
+		}
+		$meta['lastId'] = end($meta['indexes']);
+		$this->writeMeta($meta);
+		$this->removeCacheAll();
+		return $deleted;
 	}
 
 
 	/**
 	 * Ordernar
-	 * @param string $key
-	 * @param string $type DESC | ASC
+	 * @param string $by Chave/Valor para comparacao
+	 * @param string $type apenas DESC ou ASC
 	 * @return this
 	 */
- 	public function order($key=null, $type='DESC')
+ 	public function order($by='id', $type='desc')
 	{
 
-		$this->query->order['key'] = empty($key) ? 'id' : $key;
-		$this->query->order['type'] = empty($type) ? 'DESC' : strtoupper($type);
-
+		$this->query['order']['by'] = $by;
+		$this->query['order']['type'] = $type;
 		return $this;
 	}
+
+
 	/**
-	 * setar limite para consulta
+	 * Limite para consulta
 	 * @param number $n Posição limite para consulta
 	 * @return this
 	 */
 	public function limit($n)
 	{
-		$this->query->limit = $n;
+		$this->query['limit']  = $n;
 		return $this;
 	}
 	/**
@@ -494,9 +635,10 @@ class flatDB
 	 */
 	public function offset($n)
 	{
-		$this->query->offset = $n;
+		$this->query['offset'] = $n;
 		return $this;
 	}
+	
 	/**
 	 * configurar Condições  / Filtro
 	 * @param array $array ARRAY da condições
@@ -504,8 +646,17 @@ class flatDB
 	 */
 	public function where(array $array)
 	{
-		$this->query->where = $array;
+		$this->query['where'] = $array;
 		return $this;
+	}
+
+	/**
+	 * Description
+	 * @return number Quantidade
+	 */
+	public function length()
+	{
+		return $this->getMeta('length');
 	}
 
 
@@ -523,51 +674,114 @@ class flatDB
 		if (is_numeric($string)) return '' . ($string+1)/3.14159265359; //number PI
 		else return $string[2] . $string[0] . $string[1] . $string[0];
 	}
-
-	private function removeCache()
+	/**
+	 * Saber se tem o cache
+	 * @param mixed $name 
+	 * @return mixed
+	 */
+	private function hasCache($name)
 	{
-		$pattern = $this->prefixCache . '*';
-		foreach (glob($this->query->tablePath . $pattern) as $file) {
-            unlink($file);
-        }
-
+		return file_exists($this->getPathCache($name)); 
 	}
-
+	/**
+	 * Escrever(salvar) o cache
+	 * @param mixed $name Nome do cache
+	 * @param mixed $content Conteudo a ser salvo
+	 * @return bool
+	 */
+	private function writeCache($name, $content)
+	{
+		return $this->write($this->getPathCache($name), $content, false);	
+	}
+	/**
+	 * Ler o cache
+	 * @param mixed $name 
+	 * @return mixed
+	 */
+	private function readCache($name)
+	{
+		return $this->read($this->getPathCache($name), false);
+	}
+	/**
+	 * Remover todos os caches
+	 * @return bool
+	 */
+	private function removeCacheAll()
+	{
+		return $this->directoryInstance->delete($this->getPathCache(), false);
+	}
+	/**
+	 * Obter o caminho do cache
+	 * @param mixed $name NULL retorna apenas o diretorio
+	 * @return string Caminho completo do cache
+	 */
+	private function getPathCache($name=null)
+	{
+		$path = $this->query['tablePath'] . $this->cacheNameDir . '/';
+		if (is_null($name)) return $path;
+		return $path . $name . '.php';
+	}
+	/**
+	 * Gerar o caminho do arquivo
+	 * @param type $id ID
+	 * @param bool $addHash Adicionar ou nao HASH ao nome do arquivo
+	 * @return string retorna a string caminho montada
+	 */
+	private function getPathFile($id)
+	{
+		return $this->query['tablePath'] . $this->getBaseNameFile($id);
+	}
+	/**
+	 * obter o nome base do arquivo
+	 * @param mixed $id ID
+	 * @param bool $addHash Adicionar ou nao HASH ao nome do arquivo 
+	 * @return string
+	 */
+	private function getBaseNameFile($id)
+	{
+		return $this->simplesHash($id)  . 'i' . $id . '.php';
+	}
+	/**
+	 * Saber se arquivo existe
+	 * @param type $nameFile Nome do Arquivo
+	 * @return bool
+	 */
+	private function fileExists($nameFile)
+	{
+		return file_exists($this->getPathFile($nameFile));
+	}
 	/**
 	 * Ler o arquivo
-	 * @param string $PathOrFile  caminho ou nome do arquivo
+	 * @param string $pathOrFile  caminho ou nome do arquivo : file.php
 	 * @param bool $relative Setar $path como relativo
 	 * @return mixed
 	 */
-	private function read($PathOrFile, $relative = true)
+	private function read($pathOrFile, $relative = true)
 	{
-		if ($relative) $PathOrFile = $this->query->tablePath . $PathOrFile;
+		if ($relative) $pathOrFile = $this->query['tablePath'] . $pathOrFile;
 
-		$contents = file_get_contents($PathOrFile);
+		if (!($contents = file_get_contents($pathOrFile))) throw new Exception(sprintf('Nao foi possivel ler o arquivo: "%s"', $pathOrFile));
+		 ;
 		$contents = substr($contents, $this->strlenDenyAccess);
-
-		if (preg_match('~^\[\{.+\}\]|^\{.+\}$~', $contents)) return json_decode($contents, true);
-		else substr($contents, $this->strlenDenyAccess);
+		return json_decode($contents, true);
 	}
 
 	/**
 	 * Description
-	 * @param string $PathOrFile caminho do arquivo ou nome do arquivo
+	 * @param string $pathOrFile caminho do arquivo ou nome do arquivo
 	 * @param array $array array a ser salvo
 	 * @param bool $relative  setar $path como relativo
 	 * @return type
 	 */
-	private function write($PathOrFile,  $content, $relative = true)
+	private function write($pathOrFile,  $content, $relative = true)
 	{
-		if ($relative) $PathOrFile = $this->query->tablePath . $PathOrFile;
+		if ($relative) $pathOrFile = $this->query['tablePath'] . $pathOrFile;
 
 		if (is_array($content)) $content = json_encode($content);
 		// if (is_array($content)) $content = json_encode($content, JSON_FORCE_OBJECT);
 
-		return is_numeric(file_put_contents($PathOrFile, $this->strDenyAccess . $content  , LOCK_EX));
+		return is_numeric(file_put_contents($pathOrFile, $this->strDenyAccess . $content  , LOCK_EX));
 	}
-
-
 
 	/**
 	 * Coletar infor do metaData
@@ -580,18 +794,21 @@ class flatDB
 	}
 	/**
 	 * Gerar informacoes da tabela 
+	 * @param string|null $key Chave a retornar: lastId, length, indexes
 	 * @return array
 	 */
-	private function getMeta()
+	private function getMeta($key=null)
 	{
 		/**
-		 * [last_id]
+		 * [lastId]
 		 * [legth]
 		 * [indexes]
 		 */
-		if (!isset($this->query->table)) throw new Exception('Não existe tabela para consultar');
+		if (!isset($this->query['table'])) throw new Exception('Não existe tabela para consultar');
 		if (!$this->hasMeta()) return false;
-		return $this->read($this->metaBaseName);
+
+		$data= $this->read($this->metaBaseName);
+		return (is_null($key)) ? $data : $data[$key];
 	}
 
 	/**
@@ -600,8 +817,8 @@ class flatDB
 	 */
 	private function hasMeta()
 	{
-		if (!isset($this->query->table)) throw new Exception('Não existe tabela para consultar');
-		return file_exists($this->query->tablePath . $this->metaBaseName);
+		if (!isset($this->query['table'])) throw new Exception('Não existe tabela para consultar');
+		return file_exists($this->query['tablePath'] . $this->metaBaseName);
 	}
 
 	/**
@@ -611,9 +828,42 @@ class flatDB
 	 */
 	private function writeMeta($array)
 	{
-		if (!isset($this->query->table)) throw new Exception('Não existe tabela para consultar');
+		if (!isset($this->query['table'])) throw new Exception('Não existe tabela para consultar');
 		return $this->write($this->metaBaseName, $array);
 	}
 
+	/**
+	 * Auxiliar para a variavel $prepare, SETA
+	 * @param string $method 
+	 * @param array|null $data 
+	 * @param number $id 
+	 * @param array|null $meta 
+	 * @return void
+	 */
+	private function prepareSet($method, $data=null, $id=0, $meta=null)
+	{
+		$this->prepare['method'] = $method;
+		$this->prepare['data'] 	 = $data;
+		$this->prepare['meta']   = $meta;
+		$this->prepare['id']     = $id;
+	}
+	/**
+	 * Auxiliar para a variavel $prepare, RESETA. deixa todos os valores em NULL
+	 * @return void
+	 */
+	private function prepareReset()
+	{
+		$this->prepareSET(null, null, null, null);
+	}
+	/**
+	 * Auxiliar para a variavel $prepare, OBTEM
+	 * @param mixed $key Nome da chave para retornar. validos: method, data, meta, id
+	 * @return array Retorna a variavel (array) $prepare
+	 */
+	private function prepareGet($key)
+	{
+		// if(!isset($this->prepare[$key])) throw new Exception(sprintf('Nao existe chave "%s" em (array) $prepare.', $key));
+		return $this->prepare[$key];
+	}
 
 }// END class

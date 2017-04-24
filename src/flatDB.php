@@ -501,6 +501,27 @@ class flatDB
     	elseif ($offset > 0) $data = array_slice($result, $offset, true);
         return $result;
 	}
+
+	/**
+	 * Analizar e atualizar. Suporte de update()
+	 * @return bool
+	 */
+	private function parseAndUpdate()
+	{
+		$where = $this->query['where'];
+		$indexes = $this->getMeta('indexes');
+		$select = $this->query['select'];
+
+		if (empty($indexes) || empty($update)) return null;
+
+		if (empty($where)) {
+			foreach ($indexes as $id) {
+				$file = $this->getBaseNameFile($id);
+				$data = $this->read($file);
+				if(DNAA::change($data, $select)) ;
+			}
+		}
+	}
 	
 	/**
 	 * Analizar e colocar Construtor de put()
@@ -522,7 +543,7 @@ class flatDB
 				$file = $this->getBaseNameFile($id);
 				$data = $this->read($file);
 				// $result[$id] = DNAA::put($data, $newContent);// TRUE ira mesclar valor caso ja exista a chave
-				DNAA::put($data, $newContent, $valueMerge);// TRUE ira mesclar valor caso ja exista a chave
+				DNAA::put($data, $newContent, $valueMerge);// $valueMerge::TRUE ira mesclar valor caso ja exista a chave
 				$this->write($file, $data);
 			}
 		} else {
@@ -750,6 +771,22 @@ class flatDB
 	{
 		return file_exists($this->getPathFile($nameFile));
 	}
+
+	/**
+	 * Atualizar conteudo
+	 * @param type $key Chave ou (array)chave::valor
+	 * @param type|null $value Valor, caso $key for array, sera desconsiderado essa arg
+	 * @return this
+	 */
+	public function update($key, $value=null)
+	{
+		if (!is_array($key)) $this->query['select'] = [$key => $value];
+		else $this->query['select'] = $key;
+
+		$this->prepareSet('update');
+		return $this; //encadeamento
+	}
+
 	/**
 	 * Ler o arquivo
 	 * @param string $pathOrFile  caminho ou nome do arquivo : file.php

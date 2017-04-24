@@ -44,6 +44,13 @@ $flatdb = new flatDB('_dataDB/');
 // var_dump($flatdb->db('example')->table('default')->put(['collection.item.password'=>154])->execute());//add caso nao exista a chave
 // var_dump($flatdb->db('example')->table('default')->put(['collection.users.password'=>02115])->where(['who'=>'child'])->execute());//add item
 
+
+
+//CHANGE ======
+// var_dump($flatdb->db('example')->table('default')->update(['who'=>'child'])->where(['number'=>10])->execute());
+
+
+
 // SELECT =====
 // var_dump($flatdb->db('example')->table('default')->select()->where(['id'=>8])->execute());//selecionar
 // var_dump($flatdb->db('example')->table('default')->select('group.a')->execute());//selecionar apenas who (todos)
@@ -67,7 +74,7 @@ $flatdb = new flatDB('_dataDB/');
 
 // var_dump($flatdb->db('example')->table('default')->length());//total de arquivos salvos
 // var_dump($flatdb->db('example')->table('default')->meta());//show metadata
-var_dump($flatdb->db('example')->table('default')->all()); // retorna todos os itens
+// var_dump($flatdb->db('example')->table('default')->all()); // retorna todos os itens
 
 // $arr45 = [
 // 	5 => [
@@ -191,3 +198,20 @@ var_dump($flatdb->db('example')->table('default')->all()); // retorna todos os i
 // }
 // $end = microtime(true);
 // var_dump($end - $begin);
+
+$ok = null;
+
+function exists_key($needle, array $array)
+{
+	$exists = false;
+	foreach ($array as $key => $value) {
+		if (stripos($key, $needle) !== false) $exists = true;
+	}
+	return $exists;
+}
+$array = [
+	'ok' => 5,
+	'test' =>18,
+	15 => 'teste'
+];
+var_dump(exists_key('est', $array));

@@ -316,8 +316,7 @@ class dotNotationArrayAccess
 			}
 
 		}
-		
-
+	
 		return $array;
 	}
 

@@ -41,11 +41,11 @@ class flatDB
 	/**
 	 * @var string
 	 */
-	private $strDenyAccess =  '<?php return header("HTTP/1.0 404 Not Found"); exit(); //Negar navegação | Deny navigation ?>';
+	protected $strDenyAccess =  '<?php return header("HTTP/1.0 404 Not Found"); exit(); //Negar navegação | Deny navigation ?>';
 	/**
 	 * @var number
 	 */
-	private $strlenDenyAccess;
+	protected $strlenDenyAccess;
 	/**
 	 * @var string
 	 */
@@ -79,24 +79,14 @@ class flatDB
 
 		$this->directoryInstance = new directory();
 
-		$nameDataDBdefault = '__data.flatdb';
-		$this->db['basePath'] = is_null($dirInit) ? $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/' . $nameDataDBdefault . '.storage/' : $dirInit;
+		$nameDataDBdefault = '_data.flatdb';
+		$this->db['basePath'] = is_null($dirInit) ? $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/' . $nameDataDBdefault . '/' : $dirInit;
 		$this->directoryInstance->create($this->db['basePath']);//cria o dir
 
 
 		$this->strlenDenyAccess = strlen($this->strDenyAccess); //calcular o tamanho da string
 	}
 
-
-	/**
-	 * Retorna nome formatado
-	 * @param type $dbName 
-	 * @return type
-	 */
-	private function getDbName($dbName)
-	{
-		return $dbName  . '.' . $this->simplesHash($dbName) . '.db';
-	}
 
 	/**
 	 * Gerar o caminho do diretorio do banco
@@ -106,9 +96,7 @@ class flatDB
 	 */
 	private function getDbPath($dbName, $dbPath=null)
 	{
-		// if (empty($dbName)) $dbName = $this->db['name']; //pegaNameDefault
-		$dbName = $this->getDbName($dbName);//formatar nome
-
+		$dbName = $dbName . '.db';//formatar nome
 		if (empty($dbPath)) return $this->db['basePath'] . $dbName . '/'; //Folder default
 		else  return $dbPath . '/' . $dbName . '/';
 	}
@@ -118,11 +106,13 @@ class flatDB
 	/**
 	 * Identificar a DataBase para consulta
 	 * @param type|null $dbName nome da DB
+	 * @param  bool $dbCreate TRUE criar diretorio DB caso nao exista
 	 * @return this
 	 */
-	public function db($dbName = null)
+	public function db($dbName = null, $dbCreate=false)
 	{
-		if (!$this->dbExists($dbName)) throw new Exception(sprintf('Nao existe a tabela "%s".', $dbName));
+		if ($dbCreate) $this->dbCreate($dbName);
+		elseif (!$this->dbExists($dbName)) throw new Exception(sprintf('Nao existe a tabela "%s".', $dbName));
 
 		// $this->db['basePath']
 		$this->db['instantiated'] = true; // set instantiated
@@ -271,8 +261,8 @@ class flatDB
 	 */
 	private function getTablePath($name)
 	{
-		$name  =  $name . '.' . $this->simplesHash($name) . '.tb';
-		return $this->db['path'] . $name . '/';
+		// $name  =  $name . '.' . $this->simplesHash($name) . '.tb';
+		return $this->db['path'] . $name . '.tb/';
 	}
 
 

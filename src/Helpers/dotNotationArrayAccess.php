@@ -299,7 +299,7 @@ class dotNotationArrayAccess
 
 		if ('remove' === $method) {
 			// var_dump(strtolower($value) == strtolower($array[$keys[$i]]));//debug
-			if (is_null($value)  || !is_array($array[$keys[$i]]) && strtolower($value) == strtolower($array[$keys[$i]]) || in_array(strtolower($value), array_map('strtolower', $array[$keys[$i]]))) {
+			if (is_null($value)  || !is_array($array[$keys[$i]]) && strcasecmp($value, $array[$keys[$i]]) === 0 || in_array(strtolower($value), array_map('strtolower', $array[$keys[$i]]))) {
 				unset($array[$keys[$i]]); 
 			}
 		} else { //change

@@ -25,7 +25,7 @@ $flatdb = new flatDB('_dataDB/');
 // var_dump($flatdb->db('example')->tableDelete('default'), $flatdb->db('example')->tableExists('default'));//delete and check
 
 // $whoArr = [' PARENT ', 'Self', 'OthEr', ' ChilD    '];
-// for ($i=0; $i < 2000 ; $i++) {
+// for ($i=0; $i < 100 ; $i++) {
 // 	$arrInsert = [
 // 		'who'=> $whoArr[mt_rand(0, count($whoArr)-1)],
 // 		'uniqid'=> uniqid(rand(),true),
@@ -34,7 +34,8 @@ $flatdb = new flatDB('_dataDB/');
 // 		'group.b'=> substr(uniqid(rand(),true), -10),
 // 		'group.c'=> substr(uniqid(rand(),true), -10),
 // 		'unid' => 15,
-// 		'collection.item.use' => ['TEST' => [51, 2, 5, ' GnulId' => 999]]
+// 		'collection.item.group' => ['TEST' => [51, 2, 5, ' GnulId' => 999]],
+// 		'collection.item.id' => password_hash(uniqid(rand(),true), PASSWORD_DEFAULT)
 // 	]; 
 // 	$flatdb->db('example')->table('default')->insert($arrInsert)->execute();
 // }
@@ -50,7 +51,7 @@ $flatdb = new flatDB('_dataDB/');
 
 
 //CHANGE ======
-var_dump($flatdb->db('example')->table('default')->update(['who'=>'child'])->where(['number'=>10])->execute());
+var_dump($flatdb->db('example')->table('default')->update(['who'=>'child'])->where(['id'=>[5,1000,16]])->execute());
 
 
 
@@ -192,6 +193,8 @@ var_dump($flatdb->db('example')->table('default')->update(['who'=>'child'])->whe
 // 	'two' => 154,
 // 	'three' => 'ok'
 // ];
+
+
 
 
 

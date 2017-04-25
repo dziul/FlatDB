@@ -301,6 +301,20 @@ class flatDB
 		return $this;//encadeamento ====
 	}
 
+	/**
+	 * Atualizar conteudo
+	 * @param type $key Chave ou (array)chave::valor
+	 * @param type|null $value Valor, caso $key for array, sera desconsiderado essa arg
+	 * @return this
+	 */
+	public function update($key, $value=null)
+	{
+		if (!is_array($key)) $this->query['select'] = [$key => $value];
+		else $this->query['select'] = $key;
+
+		$this->prepareSet('update');
+		return $this; //encadeamento
+	}
 
 	/**
 	 * Colocar/Adicionar  Chave e valor ou apenas chave
@@ -344,6 +358,65 @@ class flatDB
 		return $this;
 	}
 
+
+
+	/**
+	 * Ordernar
+	 * @param string $by Chave/Valor para comparacao
+	 * @param string $type apenas DESC ou ASC
+	 * @return this
+	 */
+ 	public function order($type='desc', $by='id')
+	{
+
+		$this->query['order']['by'] = $by;
+		$this->query['order']['type'] = $type;
+		return $this;
+	}
+
+
+	/**
+	 * Limite para consulta
+	 * @param number $n Posição limite para consulta
+	 * @return this
+	 */
+	public function limit($n)
+	{
+		$this->query['limit']  = $n;
+		return $this;
+	}
+	/**
+	 * Começar a partir de
+	 * @param number $n posição onde tem que começar a leitura
+	 * @return this
+	 */
+	public function offset($n)
+	{
+		$this->query['offset'] = $n;
+		return $this;
+	}
+	
+	/**
+	 * configurar Condições  / Filtro
+	 * @param array $array ARRAY da condições
+	 * @return this
+	 */
+	public function where(array $array)
+	{
+		$this->query['where'] = $array;
+		return $this;
+	}
+
+	/**
+	 * Description
+	 * @return number Quantidade
+	 */
+	public function length()
+	{
+		return $this->getMeta('length');
+	}
+
+
 	/**
 	 * Obter todos os itens
 	 * @return array
@@ -371,6 +444,10 @@ class flatDB
 			$this->prepareReset(); // reseta array prepare
 			$this->removeCacheAll(); //remover todos os caches
 			return $data;
+		}
+		elseif ('update' === $this->prepareGet('method'))
+		{
+			return $this->parseAndUpdate();
 		}
 		elseif ('put' === $this->prepareGet('method')) {
 			$data = $this->parseAndPut($this->prepareGet('data'), $this->prepareGet('other'));
@@ -476,9 +553,7 @@ class flatDB
 
         } elseif (!$emptyWhere && !$hasCache) {
         	if (isset($where['id'])) {
-        		// $ids = (array)$where['id'];
-        		// var_dump(in_array($ids, $indexes));
-        		// if (!in_array($ids, $indexes)) throw new Exception(sprintf('Nao ha id::%s',implode(',', $ids)));
+        		if (!$this->in_array_recursive($where['id'], $indexes)) return null;
         		$indexes = (array)$where['id'];
         		unset($where['id']);	
         	}
@@ -509,15 +584,30 @@ class flatDB
 		$indexes = $this->getMeta('indexes');
 		$select = $this->query['select'];
 
-		if (empty($indexes) || empty($update)) return null;
+		if (empty($indexes) || empty($select)) return null;
 
 		if (empty($where)) {
 			foreach ($indexes as $id) {
 				$file = $this->getBaseNameFile($id);
 				$data = $this->read($file);
-				if(DNAA::change($data, $select));
+
+				// var_dump(DNAA::change($data, $select));
 			}
 		}
+		else {
+			if (isset($where['id'])) {
+				// var_dump($where['id'], $indexes);
+				if (!$this->in_array_recursive($where['id'], $indexes)) return null;
+        		$indexes = (array)$where['id'];
+        		unset($where['id']);	
+        	}
+        	foreach ($indexes as $id) {
+    			$data = $this->read($this->getBaseNameFile($id));
+    			var_dump(DNAA::change($data, $select));
+    		}
+		}
+
+		return false;
 	}
 	
 	/**
@@ -551,6 +641,7 @@ class flatDB
 			}
 		} else {
 			if (isset($where['id'])) {
+				if (!$this->in_array_recursive($where['id'], $indexes)) return null;
         		$indexes = (array)$where['id'];
         		unset($where['id']);	
         	}
@@ -607,6 +698,7 @@ class flatDB
 		if (empty($where) || empty($indexes)) return null;
 
 		if (isset($where['id'])) {
+			if (!$this->in_array_recursive($where['id'], $indexes)) return null;
     		$indexes = (array)$where['id'];
     		unset($where['id']);	
     	}
@@ -628,61 +720,6 @@ class flatDB
 	}
 
 
-	/**
-	 * Ordernar
-	 * @param string $by Chave/Valor para comparacao
-	 * @param string $type apenas DESC ou ASC
-	 * @return this
-	 */
- 	public function order($type='desc', $by='id')
-	{
-
-		$this->query['order']['by'] = $by;
-		$this->query['order']['type'] = $type;
-		return $this;
-	}
-
-
-	/**
-	 * Limite para consulta
-	 * @param number $n Posição limite para consulta
-	 * @return this
-	 */
-	public function limit($n)
-	{
-		$this->query['limit']  = $n;
-		return $this;
-	}
-	/**
-	 * Começar a partir de
-	 * @param number $n posição onde tem que começar a leitura
-	 * @return this
-	 */
-	public function offset($n)
-	{
-		$this->query['offset'] = $n;
-		return $this;
-	}
-	
-	/**
-	 * configurar Condições  / Filtro
-	 * @param array $array ARRAY da condições
-	 * @return this
-	 */
-	public function where(array $array)
-	{
-		$this->query['where'] = $array;
-		return $this;
-	}
-
-	/**
-	 * Description
-	 * @return number Quantidade
-	 */
-	public function length()
-	{
-		return $this->getMeta('length');
-	}
 
 
 	/**
@@ -776,20 +813,7 @@ class flatDB
 		return file_exists($this->getPathFile($nameFile));
 	}
 
-	/**
-	 * Atualizar conteudo
-	 * @param type $key Chave ou (array)chave::valor
-	 * @param type|null $value Valor, caso $key for array, sera desconsiderado essa arg
-	 * @return this
-	 */
-	public function update($key, $value=null)
-	{
-		if (!is_array($key)) $this->query['select'] = [$key => $value];
-		else $this->query['select'] = $key;
 
-		$this->prepareSet('update');
-		return $this; //encadeamento
-	}
 
 	/**
 	 * Ler o arquivo
@@ -801,7 +825,7 @@ class flatDB
 	{
 		if ($relative) $pathOrFile = $this->query['tablePath'] . $pathOrFile;
 
-		if (!($contents = file_get_contents($pathOrFile))) throw new Exception(sprintf('Nao foi possivel ler o arquivo: "%s"', $pathOrFile));
+		if (!($contents = @file_get_contents($pathOrFile))) throw new Exception(sprintf('Nao foi possivel ler o arquivo: "%s"', $pathOrFile));
 		 ;
 		$contents = substr($contents, $this->strlenDenyAccess);
 		return json_decode($contents, true);
@@ -821,7 +845,7 @@ class flatDB
 		if (is_array($content)) $content = json_encode($content);
 		// if (is_array($content)) $content = json_encode($content, JSON_FORCE_OBJECT);
 
-		return is_numeric(file_put_contents($pathOrFile, $this->strDenyAccess . $content  , LOCK_EX));
+		return is_numeric(@file_put_contents($pathOrFile, $this->strDenyAccess . $content  , LOCK_EX));
 	}
 
 	/**
@@ -958,6 +982,37 @@ class flatDB
 		};
 
 		return $this->array_map_recursive($fn, $haystack, true);
+	}
+
+
+
+
+	/**
+	 * Checar se um valor existe em uma array (multidimensional).
+	 * Procura em $haystack o valor $needle
+	 * Caso $needle um conjunto de valores (array), caso na consulta um dos valores nao existir, deixa de continuar a consulta e retorna FALSE
+	 * @param mixed $needle Valor a procurar. pode ser uma array @example 'ok' ou array('ok', 'list', 'news')
+	 * @param type $haystack Array base
+	 * @param type|bool $caseInsensitive  TRUE não diferencia maiúsculas e minúsculas
+	 * @param type|bool $strict TRUE checa o tipo de $needle também
+	 * @return bool
+	 */
+	private function in_array_recursive($needle, array $haystack, $caseInsensitive=false, $strict=false) 
+	{
+		if (is_array($needle) && (bool)$needle) {
+			foreach ($needle as $value) {
+				if(!$this->in_array_recursive($value, $haystack, $caseInsensitive, $strict)) return false;
+			}
+			return true;
+		}
+
+		foreach ($haystack as $item) {
+			
+			if (($strict ? $item === $needle : $item == $needle) ||
+				$caseInsensitive && !$strict && !is_array($item) && strcasecmp($needle, $item) === 0 ||
+				is_array($item) && $this->in_array_recursive($needle, $item, $caseInsensitive, $strict))  return true;
+		}
+		return false;		
 	}
 
 }// END class

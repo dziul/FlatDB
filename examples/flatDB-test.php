@@ -12,6 +12,7 @@ $flatdb = new flatDB('_dataDB/');
 // var_dump( $flatdb->dbExists('example') );
 // var_dump( $flatdb->dbCreate('example') );
 // var_dump( $flatdb->db('example') );
+// var_dump($flatdb->db('example', true));// //cria database caso nao exista
 // var_dump( $flatdb->dbDelete('example') );
 
 // var_dump($flatdb->db('example')->tableShow());
@@ -19,57 +20,52 @@ $flatdb = new flatDB('_dataDB/');
 
 // var_dump($flatdb->db('example')->tableCreate('default'));//create
 // var_dump($flatdb->db('example')->table('default'));//instance
+// var_dump($flatdb->db('example')->table('default', true));//Caso nao exista table será criado
 // var_dump($flatdb->db('example')->tableExists('default'));//exists
 // var_dump($flatdb->db('example')->tableDelete('default'), $flatdb->db('example')->tableExists('default'));//delete and check
 
-// $whoArr = ['parent', 'self', 'other', 'child'];
-// for ($i=0; $i < 1000 ; $i++) {
+// $whoArr = [' PARENT ', 'Self', 'OthEr', ' ChilD    '];
+// for ($i=0; $i < 2000 ; $i++) {
 // 	$arrInsert = [
 // 		'who'=> $whoArr[mt_rand(0, count($whoArr)-1)],
 // 		'uniqid'=> uniqid(rand(),true),
-// 		'number'=>rand(0,90),
-// 		'group.a'=> substr(uniqid(rand(),true), -10),
+// 		' NUMBER '=>rand(0,90),
+// 		'GrouP.a     '=> substr(uniqid(rand(),true), -10),
 // 		'group.b'=> substr(uniqid(rand(),true), -10),
 // 		'group.c'=> substr(uniqid(rand(),true), -10),
 // 		'unid' => 15,
-// 		'collection.item.use' => [3,8,20,2, rand(0,999), rand(0,9999)]
+// 		'collection.item.use' => ['TEST' => [51, 2, 5, ' GnulId' => 999]]
 // 	]; 
 // 	$flatdb->db('example')->table('default')->insert($arrInsert)->execute();
 // }
 
-// var_dump($flatdb->db('example')->table('default')->insert($arrInsert)->execute());//create
+// var_dump($flatdb->db('example')->table('default')->insert([' Test ' => null, false, '', 5.2100])->execute());//create
 
 
 
-// var_dump($flatdb->db('example')->table('default')->put(['collection.item.password'=>154])->execute());//add caso nao exista a chave
+// var_dump($flatdb->db('example')->table('default')->put(['collection.item.yers' => 15])->execute());//add (chave&valor) caso nao exista a chave
+// var_dump($flatdb->db('example')->table('default')->put(['collection.item.yers' => 15], true)->execute());//add e mescla valor (caso ja exista o valor)
 // var_dump($flatdb->db('example')->table('default')->put(['collection.users.password'=>02115])->where(['who'=>'child'])->execute());//add item
 
 
 
 //CHANGE ======
-// var_dump($flatdb->db('example')->table('default')->update(['who'=>'child'])->where(['number'=>10])->execute());
+var_dump($flatdb->db('example')->table('default')->update(['who'=>'child'])->where(['number'=>10])->execute());
 
 
 
 // SELECT =====
-// var_dump($flatdb->db('example')->table('default')->select()->where(['id'=>8])->execute());//selecionar
+// var_dump($flatdb->db('example')->table('default')->select()->where(['id' => 15])->execute());//selecionar
 // var_dump($flatdb->db('example')->table('default')->select('group.a')->execute());//selecionar apenas who (todos)
-// var_dump($flatdb->db('example')->table('default')->select(['group.a','unid'])->execute());//selecionar apenas who,unid (todos)
-
-
-
-
-// $begin = microtime(true);
-// $flatdb->db('example')->table('default')->select()->where(['who'=> 'self'])->execute();
-// $end = microtime(true);
-// var_dump($end - $begin);
-
+// var_dump($flatdb->db('example')->table('default')->select(['group.a','unid'])->execute());//selecionar apenas 'group.a' e 'unid'
+// var_dump($flatdb->db('example')->table('default')->select(['group.a','unid', 'who'])->order('asc', 'who')->execute());//selecionar apenas 'group.a', 'unid' e 'who'. ordernar por 'who' em desc
+// var_dump($flatdb->db('example')->table('default')->select(['group.a','unid', 'who'])->order('asc', 'who')->offset(5)->limit(10)->execute());//selecionar apenas 'group.a', 'unid' e 'who'. ordernar por 'who' em desc. pegar uma parte (offset & limit)
 
 
 
 // var_dump($flatdb->db('example')->table('default')->delete(15)->execute());//delete ids
 // var_dump($flatdb->db('example')->table('default')->delete([10,8])->execute());//delete ids
-// var_dump($flatdb->db('example')->table('default')->delete()->where(['who'=>'self', 'number'=>50])->execute());//delete com condicao
+// var_dump($flatdb->db('example')->table('default')->delete()->where(['who'=>'other', 'number'=>50])->execute());//delete com condicao
 
 
 // var_dump($flatdb->db('example')->table('default')->length());//total de arquivos salvos
@@ -188,63 +184,23 @@ $flatdb = new flatDB('_dataDB/');
 // end CHANGE accessArray ======
 
 
-$arr = [
-	' test ' =>5,
-	' test2 ' => 6,
-	5 => [
-		' test ',
-		' xdebug ' => [
-			'mXs' => 'whereON',
-			66
-		]
-	],
-	8,
-	7954
-];
-
-
-function array_map_recursive($callback, array $array, $alsoTheKey=false)
-{
-	$callback = (array)$callback; //force to array
-	$result = [];
-	foreach ($array as $key => $value) {
-
-		if(is_array($callback)) {
-			foreach ($callback as $fn) {
-				if ($alsoTheKey) $key = $fn($key);
-			}
-		}
-
-		if (is_array($value)) $result[$key] = array_map_recursive($callback, $value, $alsoTheKey);
-		else {
-			for ($i=0, $c = count($callback); $i < $c; $i++) { 
-				$value = $callback[$i]($value);
-			}
-			$result[$key] = $value;
-			
-		}
-	}
-	return $result;
-}
+// $arr = [
+// 	'one' => [
+// 		'subone' => ['ok', 'not'],
+// 		'list'
+// 	],
+// 	'two' => 154,
+// 	'three' => 'ok'
+// ];
 
 
 
 
-
-$limit = 10000;
-$begin = microtime(true);
-for ($i=0; $i < $limit; $i++) { 
-	array_map_recursive(['strtoupper', 'trim'], $arr, true);
-}
-$end = microtime(true);
-var_dump($end - $begin);
-var_dump(array_map_recursive(['strtoupper', 'trim'], $arr));
-
-$limit = 10000;
-$begin = microtime(true);
-for ($i=0; $i < $limit; $i++) { 
-	array_filter($arr);
-}
-$end = microtime(true);
-var_dump($end - $begin);
-var_dump(array_filter($arr));
+// $limit = 10000;
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	array_map_recursive(['strtoupper', 'trim'], $arr, true);
+// }
+// $end = microtime(true);
+// var_dump($end - $begin);
+// var_dump(array_map_recursive(['strtoupper', 'trim'], $arr));

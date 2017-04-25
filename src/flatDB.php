@@ -270,9 +270,8 @@ class flatDB
 
 
 	/**
-	 * Adcionar conteudo
-	 * @param array $array 
-	 * @param  mixed $nameID Caso seja necessario ADICIONAR um ID personalizado.
+	 * Adcionar Conteúdo
+	 * @param array $array Array sera salvo. cada elemento (chave e valor) seram passados para 'caixa baixa' (lower) e retirado qualquer espaço em branco no inicio e final
 	 * @return this
 	 */
 	public function insert(array $array)
@@ -288,6 +287,9 @@ class flatDB
 			$id = end($meta['indexes'])+1;
 		}
 
+		
+
+		$array = $this->lowercase($array);
 		$array['id'] = $id;
 		$meta['lastId'] = $id;
 		$meta['indexes'][$id] = $id;
@@ -296,18 +298,20 @@ class flatDB
 		// execute data ==========
 		$this->prepareSet('insert', DNAA::create($array), $id, $meta);
 
-		return $this;//encadeamento
+		return $this;//encadeamento ====
 	}
 
 
 	/**
 	 * Colocar/Adicionar  Chave e valor ou apenas chave
-	 * @param type $newContent Caso seja conjunto de chave&valor, se ja exitir a chave o valor sera mesclado com o existente.
+	 * @param mixed $newContent Caso seja conjunto de chave&valor, se ja exitir a chave o valor sera mesclado com o existente.
+	 * @param  bool $valueMerge TRUE Mesclar valor caso exista um valor na chave (ira converte em array, caso seja uma string o valor existente)
 	 * @return this
 	 */
-	public function put($newContent)
+	public function put($newContent, $valueMerge=false)
 	{
-		$this->prepareSet('put', $newContent); //nesse caso sera salvo o conteudo a ser adicionado em 'data'
+		$newContent = $this->lowercase($newContent);
+		$this->prepareSet('put', $newContent, null, null, $valueMerge); //nesse caso sera salvo o conteudo a ser adicionado em 'data'
 		return $this;
 	}
 	public function remove($keys)
@@ -369,7 +373,7 @@ class flatDB
 			return $data;
 		}
 		elseif ('put' === $this->prepareGet('method')) {
-			$data = $this->parseAndPut($this->prepareGet('data'));
+			$data = $this->parseAndPut($this->prepareGet('data'), $this->prepareGet('other'));
 			$this->prepareReset(); // reseta array prepare
 			$this->removeCacheAll(); //remover todos os caches
 			return $data;
@@ -380,8 +384,9 @@ class flatDB
 			return $this->parseAndSelect();
 		}
 		elseif ('deleteById' === $this->prepareGet('method')) {
+			$ids = $this->prepareGet('id');
 			$this->prepareReset(); // reseta array prepare
-			return $this->parseAndDelete($this->prepareGet('id'));
+			return $this->parseAndDelete($ids);
 		}
 		elseif ('deleteByWhere' === $this->prepareGet('method')) {
 			$this->prepareReset(); // reseta array prepare
@@ -447,7 +452,7 @@ class flatDB
     	$limit  	= $this->query['limit'];
 
     	$result = [];//init result
-        $cacheName =  sha1(json_encode((array)$where + (array)$select));
+        $cacheName =  sha1(json_encode((array)$where + (array)$select + $order));
         // BEGIN caso exista cache ===
         if ($hasCache = $this->hasCache($cacheName)) {
         	$result = $this->readCache($cacheName);
@@ -483,12 +488,14 @@ class flatDB
     		}
         }
 
-        if (!$hasCache) $this->writeCache($cacheName, $result);//salvar cache
+        
+        if (!$hasCache) {
+        	$this->parseAndOrder($result, $order);//ordenar
+        	$this->writeCache($cacheName, $result);//salvar cache
+        }
 
-        $this->parseAndOrder($result, $order);//ordenar
-
-    	if ($limit > 0)  $data = array_slice($result, $offset, $limit, true);
-    	elseif ($offset > 0) $data = array_slice($result, $offset, true);
+    	if ($limit > 0)  $result = array_slice($result, $offset, $limit, true);
+    	elseif ($offset > 0) $result = array_slice($result, $offset, true);
         return $result;
 	}
 
@@ -508,7 +515,7 @@ class flatDB
 			foreach ($indexes as $id) {
 				$file = $this->getBaseNameFile($id);
 				$data = $this->read($file);
-				if(DNAA::change($data, $select)) ;
+				if(DNAA::change($data, $select));
 			}
 		}
 	}
@@ -525,6 +532,7 @@ class flatDB
 		$where 	 = $this->query['where'];
 		$indexes = $this->getMeta('indexes');
 		// $result  = [];
+		$placed = false;
 
 		if (empty($indexes)) return null;
 
@@ -533,8 +541,13 @@ class flatDB
 				$file = $this->getBaseNameFile($id);
 				$data = $this->read($file);
 				// $result[$id] = DNAA::put($data, $newContent);// TRUE ira mesclar valor caso ja exista a chave
-				DNAA::put($data, $newContent, $valueMerge);// $valueMerge::TRUE ira mesclar valor caso ja exista a chave
-				$this->write($file, $data);
+				// DNAA::put($data, $newContent, $valueMerge);// $valueMerge::TRUE ira mesclar valor caso ja exista a chave
+				if (DNAA::put($data, $newContent, $valueMerge)) {
+					$placed = true;
+					$this->write($file, $data);
+				}
+
+				// var_dump(DNAA::put($data, $newContent, $valueMerge));
 			}
 		} else {
 			if (isset($where['id'])) {
@@ -545,9 +558,10 @@ class flatDB
 				$file = $this->getBaseNameFile($id);
 				$data = $this->read($file);
 
-				if (DNAA::exists($data, $where)) {
+				if (DNAA::exists($data, $where) && DNAA::put($data, $newContent, $valueMerge)) {
 					// $result[$id] = DNAA::put($data, $newContent);// TRUE ira mesclar valor caso ja exista a chave
-					DNAA::put($data, $newContent, $valueMerge);// TRUE ira mesclar valor caso ja exista a chave
+					// DNAA::put($data, $newContent, $valueMerge);// TRUE ira mesclar valor caso ja exista a chave
+					$placed = true;
 					$this->write($file, $data);
 				}
 			}
@@ -555,7 +569,7 @@ class flatDB
 
 		// $this->parseAndOrder($result, $order);//ordenar
 		// return $result;
-		return true;
+		return $placed;
 	}
 
 	/**
@@ -620,7 +634,7 @@ class flatDB
 	 * @param string $type apenas DESC ou ASC
 	 * @return this
 	 */
- 	public function order($by='id', $type='desc')
+ 	public function order($type='desc', $by='id')
 	{
 
 		$this->query['order']['by'] = $by;
@@ -867,12 +881,13 @@ class flatDB
 	 * @param array|null $meta 
 	 * @return void
 	 */
-	private function prepareSet($method, $data=null, $id=0, $meta=null)
+	private function prepareSet($method, $data=null, $id=0, $meta=null, $other=null)
 	{
 		$this->prepare['method'] = $method;
 		$this->prepare['data'] 	 = $data;
 		$this->prepare['meta']   = $meta;
 		$this->prepare['id']     = $id;
+		$this->prepare['other']  = $other;
 	}
 	/**
 	 * Auxiliar para a variavel $prepare, RESETA. deixa todos os valores em NULL
@@ -891,6 +906,58 @@ class flatDB
 	{
 		// if(!isset($this->prepare[$key])) throw new Exception(sprintf('Nao existe chave "%s" em (array) $prepare.', $key));
 		return $this->prepare[$key];
+	}
+
+
+
+
+
+
+	/**
+	 * Executar uma função a cada elemento da array
+	 * @param callable $callback Um callback ou Array de callback @example 'strtolower' ou array('strtolower', 'trim')
+	 * @param array $array  Array base
+	 * @param bool $alsoTheKey TRUE executa a funcao também na chaves. FALSE executa apenas no valor
+	 * @return array
+	 */
+	private function array_map_recursive($callback, array $array, $alsoTheKey=false)
+	{
+		$callback = (array)$callback; //force to array
+		$result = [];
+		foreach ($array as $key => $value) {
+
+			if(is_array($callback)) {
+				foreach ($callback as $fn) {
+					if ($alsoTheKey) $key = $fn($key);
+				}
+			}
+
+			if (is_array($value)) $result[$key] = $this->array_map_recursive($callback, $value, $alsoTheKey);
+			else {
+				for ($i=0, $c = count($callback); $i < $c; $i++) { 
+					$value = $callback[$i]($value);
+				}
+				$result[$key] = $value;
+				
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * deixar lowercase os elementos da array
+	 * @param array $haystack A Array
+	 * @return string Array Modificado
+	 */
+	private function lowercase(array $haystack)
+	{
+		
+		$fn = function($string){
+			if (!is_string($string)) return $string;
+			return mb_strtolower(trim($string), 'UTF-8');
+		};
+
+		return $this->array_map_recursive($fn, $haystack, true);
 	}
 
 }// END class

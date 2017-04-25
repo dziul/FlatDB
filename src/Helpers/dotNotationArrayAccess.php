@@ -185,19 +185,19 @@ class dotNotationArrayAccess
 	 * Colocar / Adicionar , novo Chave&Valor
 	 * @param array &$array Array base
 	 * @param type $keys Chave&Valor a ser adicionado /ou apenas chave
-	 * @param type|bool $notAddInExists TRUE Nao add em chave existente
+	 * @param type|bool $addInExists FALSE Nao add em chave existente
 	 * @param type|bool $valueMerge Mesclar valores 
 	 * @param type|string $value 
 	 * @return bool|Array FALSE caso exista chave
 	 */
-	public static function put(array &$array, $keys, $valueMerge=false, $notAddInExists=true, $value='')
+	public static function put(array &$array, $keys, $addInExists=false, $valueMerge=true, $value='')
 	{
 		$newKeys = [];
 		foreach ((array)$keys as $k => $v) {
 			if (is_numeric($k)) $newKeys[] = $v;
 			else $newKeys[] = $k;
 		}
-		if ($notAddInExists && self::exists($array, $newKeys)) return false;
+		if (!$addInExists && self::exists($array, $newKeys)) return false;
 		return self::insert($array, $keys, $valueMerge, true, $value);
 	}
 
@@ -360,47 +360,5 @@ class dotNotationArrayAccess
 		return $valueCompare ? in_array($valueCompare, (array)$array) : $array;
 
 	}
-
-
-	/**
-	 * Alternativa multidimencional|Recursivo da função in_array.
-	 * Checar se o valor existe na array
-	 * @param string|array $needle valor a ser procurado, pode ser um grupo (ARRAY) de string. @example 'value' ou array('value', 'value2', 'value3', '...')
-	 * @param type $haystack Array a ser consultada
-	 * @param type|bool $strict TRUE ativa a comparação FORÇADA, checa também o tipo de $needle em $haystack
-	 * @return bool TRUE caso seja encontrado, FALSE caso ao contrário
-	 */
-	private static function inArray($needle, $haystack, $strict=false, &$result=0) 
-	{
-		if (is_array($needle)) {
-			foreach ($needle as $value) {
-				if(self::inArray($value, $haystack, $strict, $result)) $result++;
-				else $result--;
-				// var_dump($result);//debug
-			}
-			return $result === count($needle);
-		}
-
-		foreach ($haystack as $element) {
-			if (($strict ? $element === $needle : $element == $needle) || (is_array($element) && self::inArray($needle, $element, $strict)) )  return true;
-		}
-		return false;		
-	}
-
-
-	// private static function _key_(array $array){
-	// 	foreach ($array as $key => $value) {
-	// 		return $key;
-	// 	}
-	// }
-	// private static function _value_(array $array){
-	// 	foreach ($array as $value) {
-	// 		return $value;
-	// 	}
-	// }
-	// private static function array_empty(array $array)
-	// {
-	// 	return !(bool) count($array);
-	// }
 
  }//END class

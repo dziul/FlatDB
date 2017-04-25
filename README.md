@@ -4,6 +4,7 @@ flatDB é um banco de dados baseado em armazenamento ***multi-level file flat***
 
 **Destaques:**
 - Sistemas baseados em armazenamento chave-valor
+- Acessar elemento via *dot notation*
 - Livre de esquema
 - Sistema de armazenamento em cache integrado, para melhorar o desempenho
 - Métodos de encadeamento
@@ -11,7 +12,6 @@ flatDB é um banco de dados baseado em armazenamento ***multi-level file flat***
 - suporte a:  WHERE(), LIMIT(), OFFSET(), ORDER(), LENGTH() entre outros
 - Suporte multi banco de dados e tabelas
 - Protegido contra  *access from web-browser* por URL
-- 
 
 
 ##### estrutura de como é salvo os dados

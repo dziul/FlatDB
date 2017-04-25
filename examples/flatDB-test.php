@@ -188,30 +188,63 @@ $flatdb = new flatDB('_dataDB/');
 // end CHANGE accessArray ======
 
 
-
-
-
-// $limit = 10000;
-// $begin = microtime(true);
-// for ($i=0; $i < $limit; $i++) { 
-// //algo
-// }
-// $end = microtime(true);
-// var_dump($end - $begin);
-
-$ok = null;
-
-function exists_key($needle, array $array)
-{
-	$exists = false;
-	foreach ($array as $key => $value) {
-		if (stripos($key, $needle) !== false) $exists = true;
-	}
-	return $exists;
-}
-$array = [
-	'ok' => 5,
-	'test' =>18,
-	15 => 'teste'
+$arr = [
+	' test ' =>5,
+	' test2 ' => 6,
+	5 => [
+		' test ',
+		' xdebug ' => [
+			'mXs' => 'whereON',
+			66
+		]
+	],
+	8,
+	7954
 ];
-var_dump(exists_key('est', $array));
+
+
+function array_map_recursive($callback, array $array, $alsoTheKey=false)
+{
+	$callback = (array)$callback; //force to array
+	$result = [];
+	foreach ($array as $key => $value) {
+
+		if(is_array($callback)) {
+			foreach ($callback as $fn) {
+				if ($alsoTheKey) $key = $fn($key);
+			}
+		}
+
+		if (is_array($value)) $result[$key] = array_map_recursive($callback, $value, $alsoTheKey);
+		else {
+			for ($i=0, $c = count($callback); $i < $c; $i++) { 
+				$value = $callback[$i]($value);
+			}
+			$result[$key] = $value;
+			
+		}
+	}
+	return $result;
+}
+
+
+
+
+
+$limit = 10000;
+$begin = microtime(true);
+for ($i=0; $i < $limit; $i++) { 
+	array_map_recursive(['strtoupper', 'trim'], $arr, true);
+}
+$end = microtime(true);
+var_dump($end - $begin);
+var_dump(array_map_recursive(['strtoupper', 'trim'], $arr));
+
+$limit = 10000;
+$begin = microtime(true);
+for ($i=0; $i < $limit; $i++) { 
+	array_filter($arr);
+}
+$end = microtime(true);
+var_dump($end - $begin);
+var_dump(array_filter($arr));

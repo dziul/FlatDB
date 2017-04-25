@@ -299,16 +299,16 @@ class dotNotationArrayAccess
 
 		if ('remove' === $method) {
 			// var_dump(strtolower($value) == strtolower($array[$keys[$i]]));//debug
-			if (is_null($value)  || !is_array($array[$keys[$i]]) && strcasecmp($value, $array[$keys[$i]]) === 0 || in_array(strtolower($value), array_map('strtolower', $array[$keys[$i]]))) {
+			if (is_null($value)  || !is_array($array[$keys[$i]]) && (string)$value === (string)$array[$keys[$i]] || in_array($value, $array[$keys[$i]])) {
 				unset($array[$keys[$i]]); 
 			}
 		} else { //change
 
 			if ($compare) {
 				if (!is_array($value)) return null;
-				if (is_array($array[$keys[$i]]) && $keyFound = array_keys(array_map('strtolower', $array[$keys[$i]]), key(array_map('strtolower', $value)))) {
+				if (is_array($array[$keys[$i]]) && $keyFound = array_keys($array[$keys[$i]], key($value))) {
 					foreach ($keyFound as $k) {
-						$array[$keys[$i]][$k] = self::_value_($value);
+						$array[$keys[$i]][$k] = current($value);
 					}
 				}
 			} else {
@@ -357,7 +357,7 @@ class dotNotationArrayAccess
 		}
 
 		// var_dump($valueCompare, (array)$array, in_array($valueCompare, (array)$array));
-		return $valueCompare ? in_array(strtolower($valueCompare), array_map('strtolower', (array)$array)) : $array;
+		return $valueCompare ? in_array($valueCompare, (array)$array) : $array;
 
 	}
 
@@ -388,19 +388,19 @@ class dotNotationArrayAccess
 	}
 
 
-	private static function _key_(array $array){
-		foreach ($array as $key => $value) {
-			return $key;
-		}
-	}
-	private static function _value_(array $array){
-		foreach ($array as $key => $value) {
-			return $value;
-		}
-	}
-	private static function array_empty(array $array)
-	{
-		return !(bool) count($array);
-	}
+	// private static function _key_(array $array){
+	// 	foreach ($array as $key => $value) {
+	// 		return $key;
+	// 	}
+	// }
+	// private static function _value_(array $array){
+	// 	foreach ($array as $value) {
+	// 		return $value;
+	// 	}
+	// }
+	// private static function array_empty(array $array)
+	// {
+	// 	return !(bool) count($array);
+	// }
 
  }//END class

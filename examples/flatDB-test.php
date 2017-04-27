@@ -43,6 +43,14 @@ $flatdb = new flatDB('_dataDB/');
 // var_dump($flatdb->db('example')->table('default')->insert([' Test ' => null, false, '', 5.2100])->execute());//create
 
 
+// $limit = 1000;
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	$flatdb->db('example')->table('default')->insert([' Test ' => null, false, '', 5.2100])->execute();
+// }
+// $end = microtime(true);
+// var_dump($end - $begin);
+
 
 // var_dump($flatdb->db('example')->table('default')->put(['collection.item.yers' => 15])->execute());//add (chave&valor) caso nao exista a chave
 // var_dump($flatdb->db('example')->table('default')->put(['collection.item.yers' => 15], true)->execute());//add e mescla valor (caso ja exista o valor)
@@ -51,7 +59,10 @@ $flatdb = new flatDB('_dataDB/');
 
 
 //CHANGE ======
-var_dump($flatdb->db('example')->table('default')->update(['who'=>'child'])->where(['id'=>[5,1000,16]])->execute());
+// var_dump($flatdb->db('example')->table('default')->update(['who'=>'Xchild'])->where(['id'=>[5,16]])->execute());// atualizar valor
+
+
+
 
 
 
@@ -61,6 +72,10 @@ var_dump($flatdb->db('example')->table('default')->update(['who'=>'child'])->whe
 // var_dump($flatdb->db('example')->table('default')->select(['group.a','unid'])->execute());//selecionar apenas 'group.a' e 'unid'
 // var_dump($flatdb->db('example')->table('default')->select(['group.a','unid', 'who'])->order('asc', 'who')->execute());//selecionar apenas 'group.a', 'unid' e 'who'. ordernar por 'who' em desc
 // var_dump($flatdb->db('example')->table('default')->select(['group.a','unid', 'who'])->order('asc', 'who')->offset(5)->limit(10)->execute());//selecionar apenas 'group.a', 'unid' e 'who'. ordernar por 'who' em desc. pegar uma parte (offset & limit)
+
+var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> '$compare//>15'])->execute()); // selecionar com condicao operadores
+var_dump($flatdb->db('example')->table('default')->select()->where(['who'=> '$regex//.*ch.*'])->execute()); // selecionar com condicao operadores
+var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> '$calcule//*5'])->execute()); // selecionar com condicao operadores
 
 
 
@@ -195,15 +210,61 @@ var_dump($flatdb->db('example')->table('default')->update(['who'=>'child'])->whe
 // ];
 
 
+// function __hash__($needle)
+// {
+// 	// $pattern = '.lmnopqrsrtuvzea';
+// 	// $outset = '';
 
-
+// 	return $needle = ($needle + 1) / 3.14159265359; //PI
+// 	// $needle = (string) $needle;
+	
+// 	// for ($i=0, $length = strlen($needle); $i < $length; $i++) { 
+// 	// 	if (isset($pattern[$needle{$i}])) $outset .= $pattern[$needle{$i}];
+// 	// }
+// 	// return $outset;
+// }
 
 
 // $limit = 10000;
 // $begin = microtime(true);
 // for ($i=0; $i < $limit; $i++) { 
-// 	array_map_recursive(['strtoupper', 'trim'], $arr, true);
+// 	__hash__($i);
 // }
 // $end = microtime(true);
 // var_dump($end - $begin);
-// var_dump(array_map_recursive(['strtoupper', 'trim'], $arr));
+// var_dump(__hash__(154785.77410));
+
+// $limit = 10000;
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	hash('crc32', $i);
+// }
+// $end = microtime(true);
+// var_dump($end - $begin);
+// var_dump(hash('crc32', $i));
+
+
+function compareOrCalculate($a, $b, $operator) {
+	// return strcasecmp($a, $b) === 1;
+	//usado http://php.net/manual/pt_BR/language.operators.arithmetic.php
+	if ($operator == '>') return strcmp($a, $b) === 1;
+	if ($operator == '>=') return strcmp($a, $b) === 1 || strcmp($a, $b) === 0;
+	if ($operator == '<') return strcmp($a, $b) === -1;
+	if ($operator == '<=') return strcmp($a, $b) === -1 || strcmp($a, $b) === 0;
+	// if ($operator == '>') return $a > $b;
+	// elseif ($operator == '>=') return $a >= $b;
+	// elseif ($operator == '<') return $a < $b;
+	// elseif ($operator == '<=') return $a <= $b;
+	elseif ($operator == '==') return $a == $b;
+	elseif ($operator == '===') return $a === $b;
+	elseif ($operator == '!==') return $a !== $b;
+	elseif ($operator == '+' && is_numeric($a) && is_numeric($b)) return $a + $b;
+	elseif ($operator == '-' && is_numeric($a) && is_numeric($b)) return $a - $b;
+	elseif ($operator == '*' && is_numeric($a) && is_numeric($b)) return $a * $b;
+	// elseif ($operator == '**') return $a ** $b; // >= php5.6
+	elseif ($operator == '/' && is_numeric($a) && is_numeric($b)) return $a / $b;
+	elseif ($operator == '%' && is_numeric($a) && is_numeric($b)) return $a % $b;
+	else return null;
+}
+
+var_dump(compareOrCalculate(3, 2, '>'));

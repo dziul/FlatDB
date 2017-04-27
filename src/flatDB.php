@@ -312,6 +312,8 @@ class flatDB
 		if (!is_array($key)) $this->query['select'] = [$key => $value];
 		else $this->query['select'] = $key;
 
+		$this->query['select'] = $this->lowercase($this->query['select']);// all lowercase
+
 		$this->prepareSet('update');
 		return $this; //encadeamento
 	}
@@ -528,6 +530,10 @@ class flatDB
         $offset 	= $this->query['offset'];
     	$limit  	= $this->query['limit'];
 
+
+
+    	// var_dump($this->like($where));
+
     	$result = [];//init result
         $cacheName =  sha1(json_encode((array)$where + (array)$select + $order));
         // BEGIN caso exista cache ===
@@ -583,6 +589,7 @@ class flatDB
 		$where = $this->query['where'];
 		$indexes = $this->getMeta('indexes');
 		$select = $this->query['select'];
+		$exists = false;
 
 		if (empty($indexes) || empty($select)) return null;
 
@@ -602,12 +609,16 @@ class flatDB
         		unset($where['id']);	
         	}
         	foreach ($indexes as $id) {
-    			$data = $this->read($this->getBaseNameFile($id));
-    			var_dump(DNAA::change($data, $select));
+        		$file = $this->getBaseNameFile($id);
+    			$data = $this->read($file);
+    			if (DNAA::exists($data, $where) && DNAA::change($data, $select)) {
+    				$this->write($file, $data);
+    				$exists = true;
+    			} else $exists = false;
     		}
 		}
 
-		return false;
+		return $exists;
 	}
 	
 	/**
@@ -724,17 +735,16 @@ class flatDB
 
 	/**
 	 * Gerar um simples hash
-	 * @param string $string 
+	 * @param mixed $needle 
 	 * @return string
 	 */
-	private function simplesHash($string)
+	private function simplesHash($needle)
 	{
-		// return hash('crc32', $string); //lower
-		// return strtolower(str_replace('=', '', base64_encode($string))); //lower
-		// return is_numeric($string) ? $string/.5 . '.' . $string+$string; //fast
-		// return  str_pad($string, 24, 'a0b1c2d3e4f5g6900');//alternative
-		if (is_numeric($string)) return '' . ($string+1)/3.14159265359; //number PI
-		else return $string[2] . $string[0] . $string[1] . $string[0];
+		// return $needle;
+		return hash('crc32', $needle); //lower
+		// if (is_numeric($needle)) return '' . ($needle+1)/3.14159265359; //number PI
+		// else return $needle[2] . $needle[0] . $needle[1] . $needle[0];
+		// return md5($needle);
 	}
 	/**
 	 * Saber se tem o cache
@@ -801,7 +811,7 @@ class flatDB
 	 */
 	private function getBaseNameFile($id)
 	{
-		return $this->simplesHash($id)  . 'i' . $id . '.php';
+		return $this->simplesHash($id) . '.php';
 	}
 	/**
 	 * Saber se arquivo existe
@@ -935,6 +945,55 @@ class flatDB
 
 
 
+
+
+	/**
+	 * HELPERS ===============================
+	 * =======================================
+	 * =======================================
+	 * =======================================
+	 * =======================================
+	 * =======================================
+	 */
+
+	private function like($value, &$valueCompare=null, $fnExists=false, $mark=false)
+	{
+
+		if ($value{0} !== '$') return null;
+		elseif ($fnExists) return true; // caso precise apenas saber se existi o $
+
+		elseif (is_numeric(strpos($value, '$compare//')) || is_numeric(strpos($value, '$calcule//'))) {
+
+		}
+		elseif (is_numeric(strpos($value, '$regex//'))) {
+
+		}
+		else false;
+	}
+
+	private function compareOrCalculate($a, $b, $operator)
+	{
+		// return strcasecmp($a, $b) === 1;
+		//usado http://php.net/manual/pt_BR/language.operators.arithmetic.php
+		if ($operator == '>') return strcmp($a, $b) === 1;
+		if ($operator == '>=') return strcmp($a, $b) === 1 || strcmp($a, $b) === 0;
+		if ($operator == '<') return strcmp($a, $b) === -1;
+		if ($operator == '<=') return strcmp($a, $b) === -1 || strcmp($a, $b) === 0;
+		// if ($operator == '>') return $a > $b;
+		// elseif ($operator == '>=') return $a >= $b;
+		// elseif ($operator == '<') return $a < $b;
+		// elseif ($operator == '<=') return $a <= $b;
+		elseif ($operator == '==') return $a == $b;
+		elseif ($operator == '===') return $a === $b;
+		elseif ($operator == '!==') return $a !== $b;
+		elseif ($operator == '+' && is_numeric($a) && is_numeric($b)) return $a + $b;
+		elseif ($operator == '-' && is_numeric($a) && is_numeric($b)) return $a - $b;
+		elseif ($operator == '*' && is_numeric($a) && is_numeric($b)) return $a * $b;
+		// elseif ($operator == '**') return $a ** $b; // >= php5.6
+		elseif ($operator == '/' && is_numeric($a) && is_numeric($b)) return $a / $b;
+		elseif ($operator == '%' && is_numeric($a) && is_numeric($b)) return $a % $b;
+		else return null;
+	}
 
 
 	/**

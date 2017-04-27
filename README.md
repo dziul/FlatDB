@@ -1,6 +1,6 @@
 # FlatDB
 flatDB é um banco de dados baseado em armazenamento ***multi-level file flat***. Uma ótima solução quando não há nenhum outro banco de dados disponível.
-> Sei que é algo improvável, mas onde trabalho (uma multinacional) não disponibilizam um DB, já que não faço parte da equipe de DEV (questão burocrática). Na real nem tem uma extensão de acesso a banco de dados como: PDO ou MySQL. Como *"um ponto final não significa um fim"*, surgiu esse projeto.
+> Sei que é algo improvável, mas na empresa onde trabalho (alias, uma multinacional) não disponibilizam um DB. Já que não faço parte da equipe de DEV (questão burocrática). Na real nem tem uma extensão de acesso a banco de dados como: PDO ou MySQL; por exemplo. Mas como *"brasileiro nao desisti nunca"*, surgiu esse projeto em base nesse carência por DB. 
 
 **Destaques:**
 - Sistemas baseados em armazenamento chave-valor

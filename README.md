@@ -1,4 +1,4 @@
-# FlatDB
+# FlatDB (em desenvolvimento)
 flatDB é um banco de dados baseado em armazenamento ***multi-level file flat***. Uma ótima solução quando não há nenhum outro banco de dados disponível.
 > Sei que é algo improvável, mas na empresa onde trabalho (alias, uma multinacional) não disponibilizam um DB. Já que não faço parte da equipe de DEV (questão burocrática). Na real nem tem uma extensão de acesso a banco de dados como: PDO ou MySQL; por exemplo. Mas como *"brasileiro nao desisti nunca"*, surgiu esse projeto em base nesse carência por DB. 
 

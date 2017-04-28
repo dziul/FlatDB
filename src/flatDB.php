@@ -971,6 +971,10 @@ class flatDB
 		else false;
 	}
 
+
+
+
+
 	private function compareOrCalculate($a, $b, $operator)
 	{
 		// return strcasecmp($a, $b) === 1;
@@ -994,6 +998,17 @@ class flatDB
 		elseif ($operator == '%' && is_numeric($a) && is_numeric($b)) return $a % $b;
 		else return null;
 	}
+
+
+
+
+
+
+
+
+
+
+
 
 
 	/**

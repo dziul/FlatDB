@@ -73,9 +73,9 @@ $flatdb = new flatDB('_dataDB/');
 // var_dump($flatdb->db('example')->table('default')->select(['group.a','unid', 'who'])->order('asc', 'who')->execute());//selecionar apenas 'group.a', 'unid' e 'who'. ordernar por 'who' em desc
 // var_dump($flatdb->db('example')->table('default')->select(['group.a','unid', 'who'])->order('asc', 'who')->offset(5)->limit(10)->execute());//selecionar apenas 'group.a', 'unid' e 'who'. ordernar por 'who' em desc. pegar uma parte (offset & limit)
 
-var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> '$compare//>15'])->execute()); // selecionar com condicao operadores
-var_dump($flatdb->db('example')->table('default')->select()->where(['who'=> '$regex//.*ch.*'])->execute()); // selecionar com condicao operadores
-var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> '$calcule//*5'])->execute()); // selecionar com condicao operadores
+// var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> '$compare//>15'])->execute()); // selecionar com condicao operadores
+// var_dump($flatdb->db('example')->table('default')->select()->where(['who'=> '$regex//.*ch.*'])->execute()); // selecionar com condicao operadores
+// var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> '$calcule//*5'])->execute()); // selecionar com condicao operadores
 
 
 
@@ -244,27 +244,56 @@ var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> '
 // var_dump(hash('crc32', $i));
 
 
-function compareOrCalculate($a, $b, $operator) {
-	// return strcasecmp($a, $b) === 1;
-	//usado http://php.net/manual/pt_BR/language.operators.arithmetic.php
-	if ($operator == '>') return strcmp($a, $b) === 1;
-	if ($operator == '>=') return strcmp($a, $b) === 1 || strcmp($a, $b) === 0;
-	if ($operator == '<') return strcmp($a, $b) === -1;
-	if ($operator == '<=') return strcmp($a, $b) === -1 || strcmp($a, $b) === 0;
-	// if ($operator == '>') return $a > $b;
-	// elseif ($operator == '>=') return $a >= $b;
-	// elseif ($operator == '<') return $a < $b;
-	// elseif ($operator == '<=') return $a <= $b;
-	elseif ($operator == '==') return $a == $b;
-	elseif ($operator == '===') return $a === $b;
-	elseif ($operator == '!==') return $a !== $b;
-	elseif ($operator == '+' && is_numeric($a) && is_numeric($b)) return $a + $b;
-	elseif ($operator == '-' && is_numeric($a) && is_numeric($b)) return $a - $b;
-	elseif ($operator == '*' && is_numeric($a) && is_numeric($b)) return $a * $b;
-	// elseif ($operator == '**') return $a ** $b; // >= php5.6
-	elseif ($operator == '/' && is_numeric($a) && is_numeric($b)) return $a / $b;
-	elseif ($operator == '%' && is_numeric($a) && is_numeric($b)) return $a % $b;
-	else return null;
+// function compareOrCalculate($a, $b, $operator) {
+// 	// return strcasecmp($a, $b) === 1;
+// 	//usado http://php.net/manual/pt_BR/language.operators.arithmetic.php
+// 	if ($operator == '>') return strcmp($a, $b) === 1;
+// 	if ($operator == '>=') return strcmp($a, $b) === 1 || strcmp($a, $b) === 0;
+// 	if ($operator == '<') return strcmp($a, $b) === -1;
+// 	if ($operator == '<=') return strcmp($a, $b) === -1 || strcmp($a, $b) === 0;
+// 	// if ($operator == '>') return $a > $b;
+// 	// elseif ($operator == '>=') return $a >= $b;
+// 	// elseif ($operator == '<') return $a < $b;
+// 	// elseif ($operator == '<=') return $a <= $b;
+// 	elseif ($operator == '==') return $a == $b;
+// 	elseif ($operator == '===') return $a === $b;
+// 	elseif ($operator == '!==') return $a !== $b;
+// 	elseif ($operator == '+' && is_numeric($a) && is_numeric($b)) return $a + $b;
+// 	elseif ($operator == '-' && is_numeric($a) && is_numeric($b)) return $a - $b;
+// 	elseif ($operator == '*' && is_numeric($a) && is_numeric($b)) return $a * $b;
+// 	// elseif ($operator == '**') return $a ** $b; // >= php5.6
+// 	elseif ($operator == '/' && is_numeric($a) && is_numeric($b)) return $a / $b;
+// 	elseif ($operator == '%' && is_numeric($a) && is_numeric($b)) return $a % $b;
+// 	else return null;
+// }
+
+
+
+function cmr($needle, $methodExist=false)
+{
+	if (is_array($needle)) {
+		$key = key($needle);
+		if ($key === '$regex' || $key === '$math' || $key === '$compare') {
+			if ($methodExist) return true;
+
+			
+		}
+
+	}
+	return null;
+
 }
 
-var_dump(compareOrCalculate(3, 2, '>'));
+
+$arr = ['$regex' => '~.*R.*~'];
+
+var_dump(cmr($arr, true));
+
+
+// $regex
+// $math
+// $compare
+// 
+// var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> ['$regex' => '.*compare.*']])->execute()); // selecionar com condicao operadores
+// var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> ['$math' => '%s + 10']])->execute()); // selecionar com condicao operadores
+// var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> ['$compare' => '%s > 10']])->execute()); // selecionar com condicao operadores

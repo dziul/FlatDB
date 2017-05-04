@@ -8,8 +8,8 @@ namespace darkziul\Helpers;
  * @license MIT
  **/
 
- class directory
- {
+class Directory
+{
 
  	public function __construct(){}
 

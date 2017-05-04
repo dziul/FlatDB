@@ -2,8 +2,8 @@
 
 namespace darkziul;
 
-use darkziul\Helpers\dotNotationArrayAccess as DNAA;
-use darkziul\Helpers\directory;
+use darkziul\Helpers\DotNotationArrayAccess as DNAA;
+use darkziul\Helpers\Directory as directory;
 use \Exception as Exception;
 
 
@@ -13,7 +13,7 @@ use \Exception as Exception;
  * regex para identificar string JSON simples  ::   ^\[\{.+\}\]|^\{.+\}$    pega algo como [{code}] | {code}
  */
 
-class flatDB
+class FlatDB
 {
 	/**
 	 * @var array
@@ -289,7 +289,7 @@ class flatDB
 
 		
 
-		$array = $this->lowercase($array);
+		$array = $this->lowerCase($array);
 		$array['id'] = $id;
 		$meta['lastId'] = $id;
 		$meta['indexes'][$id] = $id;
@@ -312,7 +312,7 @@ class flatDB
 		if (!is_array($key)) $this->query['select'] = [$key => $value];
 		else $this->query['select'] = $key;
 
-		$this->query['select'] = $this->lowercase($this->query['select']);// all lowercase
+		$this->query['select'] = $this->lowerCase($this->query['select']);// all lowerCase
 
 		$this->prepareSet('update');
 		return $this; //encadeamento
@@ -326,7 +326,7 @@ class flatDB
 	 */
 	public function put($newContent, $valueMerge=false)
 	{
-		$newContent = $this->lowercase($newContent);
+		$newContent = $this->lowerCase($newContent);
 		$this->prepareSet('put', $newContent, null, null, $valueMerge); //nesse caso sera salvo o conteudo a ser adicionado em 'data'
 		return $this;
 	}
@@ -559,7 +559,7 @@ class flatDB
 
         } elseif (!$emptyWhere && !$hasCache) {
         	if (isset($where['id'])) {
-        		if (!$this->in_array_recursive($where['id'], $indexes)) return null;
+        		if (!$this->inArrayRecursive($where['id'], $indexes)) return null;
         		$indexes = (array)$where['id'];
         		unset($where['id']);	
         	}
@@ -604,7 +604,7 @@ class flatDB
 		else {
 			if (isset($where['id'])) {
 				// var_dump($where['id'], $indexes);
-				if (!$this->in_array_recursive($where['id'], $indexes)) return null;
+				if (!$this->inArrayRecursive($where['id'], $indexes)) return null;
         		$indexes = (array)$where['id'];
         		unset($where['id']);	
         	}
@@ -652,7 +652,7 @@ class flatDB
 			}
 		} else {
 			if (isset($where['id'])) {
-				if (!$this->in_array_recursive($where['id'], $indexes)) return null;
+				if (!$this->inArrayRecursive($where['id'], $indexes)) return null;
         		$indexes = (array)$where['id'];
         		unset($where['id']);	
         	}
@@ -709,7 +709,7 @@ class flatDB
 		if (empty($where) || empty($indexes)) return null;
 
 		if (isset($where['id'])) {
-			if (!$this->in_array_recursive($where['id'], $indexes)) return null;
+			if (!$this->inArrayRecursive($where['id'], $indexes)) return null;
     		$indexes = (array)$where['id'];
     		unset($where['id']);	
     	}
@@ -947,6 +947,7 @@ class flatDB
 
 
 
+
 	/**
 	 * HELPERS ===============================
 	 * =======================================
@@ -956,60 +957,6 @@ class flatDB
 	 * =======================================
 	 */
 
-	private function like($value, &$valueCompare=null, $fnExists=false, $mark=false)
-	{
-
-		if ($value{0} !== '$') return null;
-		elseif ($fnExists) return true; // caso precise apenas saber se existi o $
-
-		elseif (is_numeric(strpos($value, '$compare//')) || is_numeric(strpos($value, '$calcule//'))) {
-
-		}
-		elseif (is_numeric(strpos($value, '$regex//'))) {
-
-		}
-		else false;
-	}
-
-
-
-
-
-	private function compareOrCalculate($a, $b, $operator)
-	{
-		// return strcasecmp($a, $b) === 1;
-		//usado http://php.net/manual/pt_BR/language.operators.arithmetic.php
-		if ($operator == '>') return strcmp($a, $b) === 1;
-		if ($operator == '>=') return strcmp($a, $b) === 1 || strcmp($a, $b) === 0;
-		if ($operator == '<') return strcmp($a, $b) === -1;
-		if ($operator == '<=') return strcmp($a, $b) === -1 || strcmp($a, $b) === 0;
-		// if ($operator == '>') return $a > $b;
-		// elseif ($operator == '>=') return $a >= $b;
-		// elseif ($operator == '<') return $a < $b;
-		// elseif ($operator == '<=') return $a <= $b;
-		elseif ($operator == '==') return $a == $b;
-		elseif ($operator == '===') return $a === $b;
-		elseif ($operator == '!==') return $a !== $b;
-		elseif ($operator == '+' && is_numeric($a) && is_numeric($b)) return $a + $b;
-		elseif ($operator == '-' && is_numeric($a) && is_numeric($b)) return $a - $b;
-		elseif ($operator == '*' && is_numeric($a) && is_numeric($b)) return $a * $b;
-		// elseif ($operator == '**') return $a ** $b; // >= php5.6
-		elseif ($operator == '/' && is_numeric($a) && is_numeric($b)) return $a / $b;
-		elseif ($operator == '%' && is_numeric($a) && is_numeric($b)) return $a % $b;
-		else return null;
-	}
-
-
-
-
-
-
-
-
-
-
-
-
 
 	/**
 	 * Executar uma função a cada elemento da array
@@ -1018,7 +965,7 @@ class flatDB
 	 * @param bool $alsoTheKey TRUE executa a funcao também na chaves. FALSE executa apenas no valor
 	 * @return array
 	 */
-	private function array_map_recursive($callback, array $array, $alsoTheKey=false)
+	private function arrayMapRecursive($callback, array $array, $alsoTheKey=false)
 	{
 		$callback = (array)$callback; //force to array
 		$result = [];
@@ -1030,7 +977,7 @@ class flatDB
 				}
 			}
 
-			if (is_array($value)) $result[$key] = $this->array_map_recursive($callback, $value, $alsoTheKey);
+			if (is_array($value)) $result[$key] = $this->arrayMapRecursive($callback, $value, $alsoTheKey);
 			else {
 				for ($i=0, $c = count($callback); $i < $c; $i++) { 
 					$value = $callback[$i]($value);
@@ -1043,11 +990,11 @@ class flatDB
 	}
 
 	/**
-	 * deixar lowercase os elementos da array
+	 * deixar lowerCase os elementos da array
 	 * @param array $haystack A Array
 	 * @return string Array Modificado
 	 */
-	private function lowercase(array $haystack)
+	private function lowerCase(array $haystack)
 	{
 		
 		$fn = function($string){
@@ -1055,7 +1002,7 @@ class flatDB
 			return mb_strtolower(trim($string), 'UTF-8');
 		};
 
-		return $this->array_map_recursive($fn, $haystack, true);
+		return $this->arrayMapRecursive($fn, $haystack, true);
 	}
 
 
@@ -1071,11 +1018,11 @@ class flatDB
 	 * @param type|bool $strict TRUE checa o tipo de $needle também
 	 * @return bool
 	 */
-	private function in_array_recursive($needle, array $haystack, $caseInsensitive=false, $strict=false) 
+	private function inArrayRecursive($needle, array $haystack, $caseInsensitive=false, $strict=false) 
 	{
 		if (is_array($needle) && (bool)$needle) {
 			foreach ($needle as $value) {
-				if(!$this->in_array_recursive($value, $haystack, $caseInsensitive, $strict)) return false;
+				if(!$this->inArrayRecursive($value, $haystack, $caseInsensitive, $strict)) return false;
 			}
 			return true;
 		}
@@ -1084,7 +1031,7 @@ class flatDB
 			
 			if (($strict ? $item === $needle : $item == $needle) ||
 				$caseInsensitive && !$strict && !is_array($item) && strcasecmp($needle, $item) === 0 ||
-				is_array($item) && $this->in_array_recursive($needle, $item, $caseInsensitive, $strict))  return true;
+				is_array($item) && $this->inArrayRecursive($needle, $item, $caseInsensitive, $strict))  return true;
 		}
 		return false;		
 	}

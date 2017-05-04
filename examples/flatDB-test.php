@@ -2,12 +2,12 @@
 
 require 'autoload.php';
 
-use darkziul\Helpers\dotNotationArrayAccess as Arr;
+use darkziul\Helpers\DotNotationArrayAccess as Arr;
 // use darkziul\Helpers\accessArrayElementUseEval as accessArrayElementUseEval;
-use darkziul\flatDB;
+use darkziul\FlatDB;
 
 // $accessAE = new accessArrayElement();
-$flatdb = new flatDB('_dataDB/');
+$flatdb = new FlatDB('_dataDB/');
 
 // var_dump( $flatdb->dbExists('example') );
 // var_dump( $flatdb->dbCreate('example') );
@@ -120,28 +120,28 @@ $flatdb = new flatDB('_dataDB/');
 // ];
 // var_dump($flatdb->db('example')->table('default')->parserAndOrder($arr45, ['by'=>'desc', 'key'=>'category.tag']));//test analizar e ordernar
 
-// $arr = [
-// 	'main' => [
-// 		[
-// 			'category' => [
-// 					'code' => microtime(true),
-// 					'name' => 'Lima',
-// 					'tag' => ['ok2','ok5','ok784', 'ok5']
-// 				],
-// 			'city' => 'rio de janeiro'
-// 		],
-// 		[
-// 			'category' => [
-// 					'code' => 'm__' . microtime(true),
-// 					'name' => 'Pedro',
-// 					'tag' => ['not2784','not7845','not54', 'sub'=>'true']
-// 				],
-// 			'city' => 'Sao Paulo'
-// 		],
-// 		'name_sub' => 'falsiane',
-// 		'Hola World'
-// ]
-// ];
+$arr = [
+	'main' => [
+		[
+			'category' => [
+					'code' => microtime(true),
+					'name' => 'Lima',
+					'tag' => ['ok2','ok5','ok784', 'ok5']
+				],
+			'city' => 'rio de janeiro'
+		],
+		[
+			'category' => [
+					'code' => 'm__' . microtime(true),
+					'name' => 'Pedro',
+					'tag' => ['not2784','not7845','not54', 'sub'=>'true']
+				],
+			'city' => 'Sao Paulo'
+		],
+		'name_sub' => 'falsiane',
+		'Hola World'
+	]
+];
 
 // $arrDotNotation = [
 // 	'main.person.name' => 'Pedro',
@@ -180,8 +180,16 @@ $flatdb = new flatDB('_dataDB/');
 // begin EXIST accessArray ====
 // ============================
 // var_dump(Arr::exists($arr, 'main.[+].category')); //saber se existe a chave
-// var_dump(Arr::exists($arr, 'main.2.category')); //saber se existe a chave   outset::FALSE
-// var_dump(Arr::exists($arr, 'main.0.category.tag','ok5')); // saber se existe e seu valor [checa se o valor procurado eh string|Array]
+// var_dump(Arr::exists($arr, 'main.1.category')); //saber se existe a chave   outset::FALSE
+// var_dump(Arr::exists($arr, 'main.0.category.tag','$if: > 5')); // saber se existe e seu valor [checa se o valor procurado eh string|Array]
+
+$str = 'Guía de usuario ICU - Normalización!';
+$term = 'i';
+$str = Normalizer::normalize($str, Normalizer::FORM_KD);
+$pattern = '/('.preg_replace('/\p{L}/u', '$0\p{Mn}?', preg_quote($term, '/')).')/ui';
+
+var_dump( preg_replace($pattern, '<strong>$0</strong>', htmlspecialchars($str)) );
+
 // var_dump(Arr::exists($arr, ['main.1.category.code', 'main.0.category.name'])); //saber se existe o grupo de chaves. No loop caso a chave atual nao existir, retorna false e para o loop
 // var_dump(Arr::exists($arr, ['main.0.category.name'=>'lima'])); //saber se existe o grupo de chaves com valores. No loop caso a chave atual 
 // var_dump(Arr::exists($arr, ['main.0.category.name'=>'lima', 'main.name_sub'])); //saber se existe o grupo de chaves com valores e apenas chaves.  Consulta mista . No loop caso a chave atual 
@@ -242,58 +250,3 @@ $flatdb = new flatDB('_dataDB/');
 // $end = microtime(true);
 // var_dump($end - $begin);
 // var_dump(hash('crc32', $i));
-
-
-// function compareOrCalculate($a, $b, $operator) {
-// 	// return strcasecmp($a, $b) === 1;
-// 	//usado http://php.net/manual/pt_BR/language.operators.arithmetic.php
-// 	if ($operator == '>') return strcmp($a, $b) === 1;
-// 	if ($operator == '>=') return strcmp($a, $b) === 1 || strcmp($a, $b) === 0;
-// 	if ($operator == '<') return strcmp($a, $b) === -1;
-// 	if ($operator == '<=') return strcmp($a, $b) === -1 || strcmp($a, $b) === 0;
-// 	// if ($operator == '>') return $a > $b;
-// 	// elseif ($operator == '>=') return $a >= $b;
-// 	// elseif ($operator == '<') return $a < $b;
-// 	// elseif ($operator == '<=') return $a <= $b;
-// 	elseif ($operator == '==') return $a == $b;
-// 	elseif ($operator == '===') return $a === $b;
-// 	elseif ($operator == '!==') return $a !== $b;
-// 	elseif ($operator == '+' && is_numeric($a) && is_numeric($b)) return $a + $b;
-// 	elseif ($operator == '-' && is_numeric($a) && is_numeric($b)) return $a - $b;
-// 	elseif ($operator == '*' && is_numeric($a) && is_numeric($b)) return $a * $b;
-// 	// elseif ($operator == '**') return $a ** $b; // >= php5.6
-// 	elseif ($operator == '/' && is_numeric($a) && is_numeric($b)) return $a / $b;
-// 	elseif ($operator == '%' && is_numeric($a) && is_numeric($b)) return $a % $b;
-// 	else return null;
-// }
-
-
-
-function cmr($needle, $methodExist=false)
-{
-	if (is_array($needle)) {
-		$key = key($needle);
-		if ($key === '$regex' || $key === '$math' || $key === '$compare') {
-			if ($methodExist) return true;
-
-			
-		}
-
-	}
-	return null;
-
-}
-
-
-$arr = ['$regex' => '~.*R.*~'];
-
-var_dump(cmr($arr, true));
-
-
-// $regex
-// $math
-// $compare
-// 
-// var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> ['$regex' => '.*compare.*']])->execute()); // selecionar com condicao operadores
-// var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> ['$math' => '%s + 10']])->execute()); // selecionar com condicao operadores
-// var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> ['$compare' => '%s > 10']])->execute()); // selecionar com condicao operadores

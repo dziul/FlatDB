@@ -17,9 +17,9 @@ namespace darkziul\Helpers;
 // STRING colchete  key[subjey] ou [key][subkey]  
 
 
-class arrayAccessException extends \Exception{}
+class ArrayAccessException extends \Exception{}
 
-class dotNotationArrayAccess
+class DotNotationArrayAccess
 {
 
 	/**
@@ -58,7 +58,7 @@ class dotNotationArrayAccess
 					self::change($array, $k, $v, $compare);
 				}
 			} else {
-				self::__change__($array, self::dotToArray($keys), $value, 'change', $compare);
+				self::engineOfChange($array, self::dotToArray($keys), $value, 'change', $compare);
 			}
 
 			return $array;
@@ -72,7 +72,7 @@ class dotNotationArrayAccess
 				else self::remove($array, $k, $v);
 			}
 		} else {
-			self::__change__($array, self::dotToArray($keys), $value, 'remove');
+			self::engineOfChange($array, self::dotToArray($keys), $value, 'remove');
 		}
 
 		return $array;
@@ -91,24 +91,22 @@ class dotNotationArrayAccess
 	public static function exists(array $array, $keys, $value=null)
 	{
 
-		if (is_array($keys)) {
+		if(is_array($keys)) {
 
-			foreach ($keys as $key => $value) {
-				if (is_numeric($key)) {
+			foreach($keys as $key => $value) {
+				if(is_numeric($key)) {
 					$result = self::exists($array, $value);
 				} else {
 					$result = self::exists($array, $key, $value);
 				}
-
-				if (!$result) return false;
-
+				if(!$result) return false;
 			}
 
 			return true; // ok, existi
 
 		} else {
-			$data = self::__get__($array, self::dotToArray($keys), false, true, $value);
-			return (bool)$data;
+			$data = self::engineOfGet($array, self::dotToArray($keys), false, true, $value);
+			return $data;
 		}
 
 	}
@@ -126,8 +124,8 @@ class dotNotationArrayAccess
 		$count = count($keys);
 		$result = [];
 		foreach ($keys as $key) {
-			if ($getKeyName) $result[$key] = self::__get__($array, self::dotToArray($key));
-			else $result[] = self::__get__($array, self::dotToArray($key));
+			if ($getKeyName) $result[$key] = self::engineOfGet($array, self::dotToArray($key));
+			else $result[] = self::engineOfGet($array, self::dotToArray($key));
 			
 		}
 
@@ -167,18 +165,15 @@ class dotNotationArrayAccess
 	 */
 	public static function insert(array &$array, $keys, $valueMerge=false, $setExists=false, $value='')
 	{
-
 		if (is_array($keys)) {
 			foreach ($keys as $k => $v) {
 				if (is_numeric($k)) self::insert($array, $v, $valueMerge, $setExists, $value);
 				else self::insert($array, $k, $valueMerge, $setExists, $v);
 			}
 		} else {
-			self::__set__($array, self::dotToArray($keys), $valueMerge, $setExists, $value);
+			self::engineOfSet($array, self::dotToArray($keys), $valueMerge, $setExists, $value);
 		}
-
 		return $array;
-
 	}
 
 	/**
@@ -211,7 +206,7 @@ class dotNotationArrayAccess
 	 * @param type|null $value 
 	 * @return array
 	 */
-	private static function __set__( array &$array, array $keys, $valueMerge=false, $setExists=true, $value=null)
+	private static function engineOfSet( array &$array, array $keys, $valueMerge=false, $setExists=true, $value=null)
 	{
 
 		$count = count($keys)-1;
@@ -224,7 +219,7 @@ class dotNotationArrayAccess
 				// var_dump($array);
 				foreach ($array as $_k => $_v) {
 					if (is_array($_v)) {
-						self::__set__($array[$_k], $keysNew, $valueMerge, $setExists, $value);	
+						self::engineOfSet($array[$_k], $keysNew, $valueMerge, $setExists, $value);	
 					}
 				}
 				return $array;
@@ -272,7 +267,7 @@ class dotNotationArrayAccess
 	 * @param string $method Metodos Aceitos Change|Remove
 	 * @return array|null
 	 */
-	private static function __change__(array &$array, array $keys, $value, $method='change', $compare=false)
+	private static function engineOfChange(array &$array, array $keys, $value, $method='change', $compare=false)
 	{
 
 		$count = count($keys)-1;
@@ -285,7 +280,7 @@ class dotNotationArrayAccess
 				// var_dump($array);
 				foreach ($array as $_k => $_v) {
 
-					if (is_array($_v)) self::__change__($array[$_k], $keysNew, $value, $method, $compare);	
+					if (is_array($_v)) self::engineOfChange($array[$_k], $keysNew, $value, $method, $compare);	
 				}
 
 				return $array;
@@ -328,12 +323,9 @@ class dotNotationArrayAccess
 	 * @param bool $methodExists TRUE ativa o  metodo exists, caso nao exista mata o loop
 	 * @return type
 	 */
-	private static function __get__(array $array, $key, $recursive=false, $methodExists=false, $valueCompare=null)
+	private static function engineOfGet(array $array, $key, $recursive=false, $methodExists=false, $valueCompare=null)
 	{
-
-
 		foreach ($key as $index => $k) {
-			// array_shift($key);
 
 			if ($k === '[+]') {
 				$pos = array_slice($key, $index+1);
@@ -341,7 +333,7 @@ class dotNotationArrayAccess
 
 				foreach ($array as $_v) {
 					if(is_array($_v)) {
-						$data = self::__get__($_v, $pos, true, $methodExists, $valueCompare);
+						$data = self::engineOfGet($_v, $pos, true, $methodExists, $valueCompare);
 
 						if ($methodExists && is_null($data)) return null;
 
@@ -356,9 +348,106 @@ class dotNotationArrayAccess
 			$array  =  $array[$k];
 		}
 
-		// var_dump($valueCompare, (array)$array, in_array($valueCompare, (array)$array));
-		return $valueCompare ? in_array($valueCompare, (array)$array) : $array;
+		if($valueCompare) {
+			if($valueCompare{0} !== '$') {
+				return in_array($valueCompare, (array)$array);
+			}
+			return self::engineOfLike($valueCompare, $array);
+		}
+		return $array;
+	}
+
+
+	private static function engineOfLike($valueA, $valueB = null, $marker=false)
+	{
+		if(strpos($valueA, '$regex:') === 0) {
+
+			$pattern = trim(substr($valueA, 7)); // '$regex:'  = 7 length
+			// if(!is_array($valueB)) return preg_match($pattern, $valueB);
+			foreach ((array)$valueB as $value) {
+				if(preg_match($pattern, $value)) return true;
+			}
+			return false;
+
+		} elseif(strpos($valueA, '$if:') === 0) {
+
+			$data = trim(substr($valueA, 4)); // '$if:' = 4 length
+			return self::conditionIfElse($data, $array);
+
+		}
+		return null;
 
 	}
 
+
+	/**
+	 * Comibnar
+	 * @param type $str string
+	 * @param type $term termo a buscar
+	 * @param string $tagName Nome da Tag de marcacao
+	 * @return type
+	 */
+	private static function highlightTerm($str, $term, $tagName = 'strong') {
+	    $str = Normalizer::normalize($str, Normalizer::FORM_KD);
+	    $pattern = '/('.preg_replace('/\p{L}/u', '$0\p{Mn}?', preg_quote($term, '/')).')/ui';
+	    return preg_replace($pattern, '<' . $tagName . '>$0</' . $tagName . '>', htmlspecialchars($str));
+	}
+
+	/**
+	 * Condicao if e else
+	 * @param string $a valor a
+	 * @param mixed $b valor b
+	 * @return bool|null
+	 */
+	private static function conditionIfElse($a, $b)
+	{
+		$a = str_replace(' ', '', $a);
+
+		if(is_array($b)) {
+			foreach ($b as $value) {
+				if(self::conditionIfElse($a, $value)) return true;
+			}
+			return null;
+		}
+
+		if(strpos($a, '!==') === 0) {
+
+			$a = substr($a, 3);
+			return $a !== $b;
+
+		} elseif(strpos($a, '===') === 0) {
+			
+			$a = substr($a, 3);
+			return $a === $b;
+
+		} elseif(strpos($a, '==') === 0) {
+			
+			$a = substr($a, 2);
+			return $a == $b;
+
+		} elseif(strpos($a, '>=') === 0) {
+			
+			$a = substr($a, 2);
+			return $a >= $b;
+
+		} elseif(strpos($a, '<=') === 0) {
+			
+			$a = substr($a, 2);
+			return $a <= $b;
+
+		} elseif(strpos($a, '>') === 0) {
+			
+			$a = substr($a, 1);
+			return $a > $b;
+
+		} elseif(strpos($a, '<') === 0) {
+			
+			$a = substr($a, 2);
+			return $a < $b;
+
+		}
+		else return null;
+	}
+
  }//END class
+ 

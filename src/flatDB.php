@@ -1,9 +1,9 @@
 <?php
 
-namespace darkziul;
+namespace Darkziul;
 
-use darkziul\Helpers\DotNotationArrayAccess as DNAA;
-use darkziul\Helpers\Directory as directory;
+use Darkziul\Helpers\DotNotationArrayAccess as DNAA;
+use Darkziul\Helpers\Directory as directory;
 use \Exception as Exception;
 
 

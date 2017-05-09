@@ -2,9 +2,9 @@
 
 require 'autoload.php';
 
-use darkziul\Helpers\DotNotationArrayAccess as Arr;
+use Darkziul\Helpers\DotNotationArrayAccess as Arr;
 // use darkziul\Helpers\accessArrayElementUseEval as accessArrayElementUseEval;
-use darkziul\FlatDB;
+use Darkziul\FlatDB;
 
 // $accessAE = new accessArrayElement();
 $flatdb = new FlatDB('_dataDB/');

@@ -6,9 +6,10 @@
     "keywords":          [
         "database",
         "storage",
-        "data"
+        "data",
+        "flat"
     ],
-    "homepage": "https://github.com/darkziul/flatDB",
+    "homepage": "https://github.com/darkziul/FlatDB",
     "authors":           [
         {
             "name":     "Luiz Carlos Wagner",
@@ -24,7 +25,7 @@
     },
     "autoload":          {
         "psr-4":                 {
-            "darkziul\\": "src/"
+            "Darkziul\\": "src/"
         }
     }
 }

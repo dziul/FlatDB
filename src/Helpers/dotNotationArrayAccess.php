@@ -1,6 +1,6 @@
 <?php
  
-namespace darkziul\Helpers;
+namespace Darkziul\Helpers;
 
 /**
  * A simple and secure helper to manipulete Array in various ways via dot notation

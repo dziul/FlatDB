@@ -1,6 +1,6 @@
 <?php
  
-namespace darkziul\Helpers;
+namespace Darkziul\Helpers;
 
 /**
  * HELPER make directory class

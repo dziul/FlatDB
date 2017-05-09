@@ -250,3 +250,13 @@ var_dump( preg_replace($pattern, '<strong>$0</strong>', htmlspecialchars($str)) 
 // $end = microtime(true);
 // var_dump($end - $begin);
 // var_dump(hash('crc32', $i));
+
+
+function highlightTerm($str, $term, $tagName = 'strong') {
+	    $str = Normalizer::normalize($str, Normalizer::FORM_KD);
+	    return preg_replace($term, '<' . $tagName . '>$0</' . $tagName . '>', $str);
+	}
+
+
+
+var_dump(highlightTerm('sinal diacrítico, gráfico, com q', '/grafico/ui'));

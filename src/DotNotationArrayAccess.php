@@ -389,7 +389,7 @@ class DotNotationArrayAccess
 	 */
 	private static function highlightTerm($str, $term, $tagName = 'strong') {
 	    $str = Normalizer::normalize($str, Normalizer::FORM_KD);
-	    $pattern = '/('.preg_replace('/\p{L}/u', '$0\p{Mn}?', preg_quote($term, '/')).')/ui';
+	    // $pattern = '/('.preg_replace('/\p{L}/u', '$0\p{Mn}?', preg_quote($term, '/')).')/ui';
 	    return preg_replace($pattern, '<' . $tagName . '>$0</' . $tagName . '>', htmlspecialchars($str));
 	}
 

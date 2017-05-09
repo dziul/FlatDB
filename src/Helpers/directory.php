@@ -8,8 +8,8 @@ namespace darkziul\Helpers;
  * @license MIT
  **/
 
- class directory
- {
+class Directory
+{
 
  	public function __construct(){}
 
@@ -46,13 +46,13 @@ namespace darkziul\Helpers;
         return false;
 	}
 
-
 	/**
 	 * Deleta o diretorio junto todas as pasta/arquivos
 	 * @param string $dir caminho do diretorio @example scard/data/dir/
+	 * @param $removeMySelf TRUE remove todos os subdiretorios,arquivos e o proprio dir setado em $dir
 	 * @return null|bool  NULL quando $dir não for um diretorio
 	 */
-	public function delete($dir)
+	public function delete($dir, $removeMySelf=true)
 	{
 
 		if(is_dir($dir))
@@ -68,7 +68,7 @@ namespace darkziul\Helpers;
 				$fn($file->getPathname());
 			}
 			
-			return rmdir($dir);
+			return ($removeMySelf) ? rmdir($dir) : true;
 		}
 
 		return null;

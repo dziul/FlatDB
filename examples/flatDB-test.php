@@ -2,16 +2,17 @@
 
 require 'autoload.php';
 
-use darkziul\Helpers\accessArrayElement as accessArrayElement;
-use darkziul\Helpers\accessArrayElementUseEval as accessArrayElementUseEval;
-use darkziul\flatDB;
+use darkziul\Helpers\DotNotationArrayAccess as Arr;
+// use darkziul\Helpers\accessArrayElementUseEval as accessArrayElementUseEval;
+use darkziul\FlatDB;
 
 // $accessAE = new accessArrayElement();
-$flatdb = new flatDB('_dataDB/');
+$flatdb = new FlatDB('_dataDB/');
 
 // var_dump( $flatdb->dbExists('example') );
 // var_dump( $flatdb->dbCreate('example') );
 // var_dump( $flatdb->db('example') );
+// var_dump($flatdb->db('example', true));// //cria database caso nao exista
 // var_dump( $flatdb->dbDelete('example') );
 
 // var_dump($flatdb->db('example')->tableShow());
@@ -19,200 +20,233 @@ $flatdb = new flatDB('_dataDB/');
 
 // var_dump($flatdb->db('example')->tableCreate('default'));//create
 // var_dump($flatdb->db('example')->table('default'));//instance
+// var_dump($flatdb->db('example')->table('default', true));//Caso nao exista table será criado
 // var_dump($flatdb->db('example')->tableExists('default'));//exists
 // var_dump($flatdb->db('example')->tableDelete('default'), $flatdb->db('example')->tableExists('default'));//delete and check
-$whoArr = ['parent', 'self', 'other', 'child'];
+
+// $whoArr = [' PARENT ', 'Self', 'OthEr', ' ChilD    '];
+// for ($i=0; $i < 100 ; $i++) {
+// 	$arrInsert = [
+// 		'who'=> $whoArr[mt_rand(0, count($whoArr)-1)],
+// 		'uniqid'=> uniqid(rand(),true),
+// 		' NUMBER '=>rand(0,90),
+// 		'GrouP.a     '=> substr(uniqid(rand(),true), -10),
+// 		'group.b'=> substr(uniqid(rand(),true), -10),
+// 		'group.c'=> substr(uniqid(rand(),true), -10),
+// 		'unid' => 15,
+// 		'collection.item.group' => ['TEST' => [51, 2, 5, ' GnulId' => 999]],
+// 		'collection.item.id' => password_hash(uniqid(rand(),true), PASSWORD_DEFAULT)
+// 	]; 
+// 	$flatdb->db('example')->table('default')->insert($arrInsert)->execute();
+// }
+
+// var_dump($flatdb->db('example')->table('default')->insert([' Test ' => null, false, '', 5.2100])->execute());//create
+
+
+// $limit = 1000;
+// $begin = microtime(true);
+// for ($i=0; $i < $limit; $i++) { 
+// 	$flatdb->db('example')->table('default')->insert([' Test ' => null, false, '', 5.2100])->execute();
+// }
+// $end = microtime(true);
+// var_dump($end - $begin);
+
+
+// var_dump($flatdb->db('example')->table('default')->put(['collection.item.yers' => 15])->execute());//add (chave&valor) caso nao exista a chave
+// var_dump($flatdb->db('example')->table('default')->put(['collection.item.yers' => 15], true)->execute());//add e mescla valor (caso ja exista o valor)
+// var_dump($flatdb->db('example')->table('default')->put(['collection.users.password'=>02115])->where(['who'=>'child'])->execute());//add item
 
 
 
-$arrInsert = [
-		'who'=> $whoArr[mt_rand(0, count($whoArr)-1)],
-		'uniqid'=> uniqid(rand(),true),
-		'number'=>rand(19,90),
-		'group'=>[
-			'a'=>substr(uniqid(rand(),true), -10),
-			'b'=>substr(uniqid(rand(),true), -10),
-			'c'=>substr(uniqid(rand(),true), -10),
-			'i' => 2
-		],
-		'unid' => 15,
-		'collection' => [
-			'item' => [
-				'use' => [
-					3,
-					20,
-					2,
-					150
-				]
-			]
-		]
-	];
-// var_dump($flatdb->db('example')->table('default')->insert($arrInsert)->execute());//create
-// var_dump($flatdb->db('example')->table('default')->insert($arrInsert, 'item')->execute());//create custom key
+//CHANGE ======
+// var_dump($flatdb->db('example')->table('default')->update(['who'=>'Xchild'])->where(['id'=>[5,16]])->execute());// atualizar valor
 
 
-$arrAdd = [
-	'type' => 'array'
-];
-$arrWhere = [
-	'who' => 'self'
-];
-// var_dump($flatdb->db('example')->table('default')->add($arrAdd)->execute());//add
-// var_dump($flatdb->db('example')->table('default')->add($arrAdd)->where($arrWhere)->execute());//add e filter 
 
 
-// var_dump($flatdb->db('example')->table('default')->remove(2)->execute());//delete
-// var_dump($flatdb->db('example')->table('default')->remove([10,8])->execute());//delete multi
 
 
+// SELECT =====
+// var_dump($flatdb->db('example')->table('default')->select()->where(['id' => 15])->execute());//selecionar
+// var_dump($flatdb->db('example')->table('default')->select('group.a')->execute());//selecionar apenas who (todos)
+// var_dump($flatdb->db('example')->table('default')->select(['group.a','unid'])->execute());//selecionar apenas 'group.a' e 'unid'
+// var_dump($flatdb->db('example')->table('default')->select(['group.a','unid', 'who'])->order('asc', 'who')->execute());//selecionar apenas 'group.a', 'unid' e 'who'. ordernar por 'who' em desc
+// var_dump($flatdb->db('example')->table('default')->select(['group.a','unid', 'who'])->order('asc', 'who')->offset(5)->limit(10)->execute());//selecionar apenas 'group.a', 'unid' e 'who'. ordernar por 'who' em desc. pegar uma parte (offset & limit)
+
+// var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> '$compare//>15'])->execute()); // selecionar com condicao operadores
+// var_dump($flatdb->db('example')->table('default')->select()->where(['who'=> '$regex//.*ch.*'])->execute()); // selecionar com condicao operadores
+// var_dump($flatdb->db('example')->table('default')->select()->where(['number'=> '$calcule//*5'])->execute()); // selecionar com condicao operadores
+
+
+
+// var_dump($flatdb->db('example')->table('default')->delete(15)->execute());//delete ids
+// var_dump($flatdb->db('example')->table('default')->delete([10,8])->execute());//delete ids
+// var_dump($flatdb->db('example')->table('default')->delete()->where(['who'=>'other', 'number'=>50])->execute());//delete com condicao
+
+
+// var_dump($flatdb->db('example')->table('default')->length());//total de arquivos salvos
 // var_dump($flatdb->db('example')->table('default')->meta());//show metadata
+// var_dump($flatdb->db('example')->table('default')->all()); // retorna todos os itens
 
+// $arr45 = [
+// 	5 => [
+// 		'category' => [
+// 			'tag' => 'kl'
+// 		],
+// 		'name' => 'galbi',
+// 		'id' =>5
+// 	],
+// 	15 => [
+// 		'category' => [
+// 			'tag' => 'al'
+// 		],
+// 		'name' => 'sa',
+// 		'id' =>15
+// 	],
+// 	4 => [
+// 		'category' => [
+// 			'tag' => 'bfc'
+// 		],
+// 		'name' => 'ab',
+// 		'id' =>4
+// 	],
+// 	1 => [
+// 		'category' => [
+// 			'tag' => 'st'
+// 		],
+// 		'name' => '3h',
+// 		'id' =>1
+// 	],
+// ];
+// var_dump($flatdb->db('example')->table('default')->parserAndOrder($arr45, ['by'=>'desc', 'key'=>'category.tag']));//test analizar e ordernar
 
 $arr = [
-	
 	'main' => [
-		
 		[
-			'id'=> uniqid(rand(),true),
-			'description' => 'okokok',
-			['title'=>'test'],
-			['title'=>'test2']
+			'category' => [
+					'code' => microtime(true),
+					'name' => 'Lima',
+					'tag' => ['ok2','ok5','ok784', 'ok5']
+				],
+			'city' => 'rio de janeiro'
 		],
 		[
-			'id'=> [uniqid(rand(),true), uniqid(rand(),true), uniqid(rand(),true), 'ok', ''],
-			'description' => 'okokok',
-			'name' => 'pedro'
+			'category' => [
+					'code' => 'm__' . microtime(true),
+					'name' => 'Pedro',
+					'tag' => ['not2784','not7845','not54', 'sub'=>'true']
+				],
+			'city' => 'Sao Paulo'
 		],
-		[
-			'id'=> uniqid(rand(),true),
-			'description' => 'okokok',
-			['test1','test2','test3']
-		]
-	],
-	'test'
-
+		'name_sub' => 'falsiane',
+		'Hola World'
+	]
 ];
 
+// $arrDotNotation = [
+// 	'main.person.name' => 'Pedro',
+// 	'main.person.city' => 'Kpa'
+// ];
 
 
-var_dump(accessArrayElement::get(['main.[+].description', 'main.[+].id'], $arr));
+// begin REMOVE accessArray ====
+// ==========================
+// var_dump(Arr::remove($arr, 'main.[+].category'), $arr); //remover chaves
+// var_dump(Arr::remove($arr, ['main.[+].category.tag'=> 'ok5', 'main.[+].city']), $arr); //remover chave, se existir o valor /ou for igual
+// ==========================
+//end REMOVE accessArray =======
 
 
+// begin GET accessArray ====
+// ==========================
+// var_dump(Arr::get($arr, ['main.[+].category', 'main.[+].[+].code'], true)); //get com o nome da KEY
+// var_dump(Arr::get($arr, ['main.[+].category', 'main.[+].[+].code'])); //get grupo
+// var_dump(Arr::get($arr, 'main.[+].category')); //get elemet
+// var_dump(Arr::get($arr)); //get all
+// ==========================
+//end GET accessArray =======
 
 
-// function test($key, $t=0){
+// begin SET accessArray ====
+// ==========================
+// var_dump(Arr::insert($arr, ['main.[+].category.code.test.RS'=>'coconut'])); //inserir. Insere caso nao exista a chave. Neste exemplo nao sera add nada, pois chave existe
+// var_dump(Arr::insert($arr, ['TreeMain.nameShow'=>'coconut'])); //inserir. Insere caso nao exista a chave. Neste exemplo sera inserido 
+// var_dump(Arr::put($arr, ['main.[+].category.code'=>'coconut'])); //coloca. caso o valor ou chave ja existir sera subscrito
+// var_dump(Arr::put($arr, ['main.[+].category.code'=>'coconut'], true)); //coloca. caso o valor ou chave ja existir sera mesclado com o existente, caso o valor for string, sera convertido em array
+// var_dump(Arr::create($arrDotNotation)); //inserir. Insere caso nao exista a chave. Neste exemplo sera inserido 
+// ==========================
+//end SET accessArray =======
 
-// 	if($t) {
-// 		return ($key === '+' || $key === '(+)' || $key == '(?)' || $key == '[?]' || $key == '[+]');
-// 	} else {
-// 		return (in_array($key, ['+', '(+)', '(?)', '[?]', '[+]']));
-// 	}
-// }
+// begin EXIST accessArray ====
+// ============================
+// var_dump(Arr::exists($arr, 'main.[+].category')); //saber se existe a chave
+// var_dump(Arr::exists($arr, 'main.1.category')); //saber se existe a chave   outset::FALSE
+// var_dump(Arr::exists($arr, 'main.0.category.tag','$if: > 5')); // saber se existe e seu valor [checa se o valor procurado eh string|Array]
 
-// $limit = 10000;
-// $begin = microtime(true);
-// for ($i=0; $i < $limit; $i++) { 
-// 	test('+',1);
-// }
-// $end = microtime(true);
-// var_dump($end - $begin);
+$str = 'Guía de usuario ICU - Normalización!';
+$term = 'i';
+$str = Normalizer::normalize($str, Normalizer::FORM_KD);
+$pattern = '/('.preg_replace('/\p{L}/u', '$0\p{Mn}?', preg_quote($term, '/')).')/ui';
 
+var_dump( preg_replace($pattern, '<strong>$0</strong>', htmlspecialchars($str)) );
 
-// // $limit = 10000;
-// $begin = microtime(true);
-// for ($i=0; $i < $limit; $i++) { 
-// 	test('+');	
-// }
-// $end = microtime(true);
-// var_dump($end - $begin);
+// var_dump(Arr::exists($arr, ['main.1.category.code', 'main.0.category.name'])); //saber se existe o grupo de chaves. No loop caso a chave atual nao existir, retorna false e para o loop
+// var_dump(Arr::exists($arr, ['main.0.category.name'=>'lima'])); //saber se existe o grupo de chaves com valores. No loop caso a chave atual 
+// var_dump(Arr::exists($arr, ['main.0.category.name'=>'lima', 'main.name_sub'])); //saber se existe o grupo de chaves com valores e apenas chaves.  Consulta mista . No loop caso a chave atual 
+// ============================
+// end EXIST accessArray ======
 
 
-// var_dump( arrayElementExists(['collection[item]' => 'use'], $arrInsert) );
-	
-// $begin = microtime(true);
-// for ($i=0; $i < $limit; $i++) { 
-// 	$accessArrayElement->getArrayElement($arrInsert, '[collection][item][use]');
-// }
-// $end = microtime(true);
-// var_dump($end - $begin);
+// begin CHANGE accessArray ====
+// ============================
+// var_dump(Arr::change($arr, 'main.[+].category.tag', 'Coconut')); // substituir o  valor, se o valor do seletor for array sera subsescrito pelo novo valor (mixed)
+// var_dump(Arr::change($arr, ['main.[+].category.tag'=>'coconut'])); //substituir o valor [metodo (array)chave & valor] 
 
-// var_dump( $accessArrayElement->getArrayElement($arrInsert, '[collection][item][use]') );
+// var_dump(Arr::change($arr, ['main.[+].category.tag' => ['ok5' => 'Coconut']], '', true)); // substituir o  valor caso exista o valor mencionado selector[current value => new value]
+// var_dump(Arr::changeStrict($arr, ['main.[+].category.tag' => ['ok5' => 'Coconut']])); // alternativo de change() [comparar e atualizar]
+// ============================
+// end CHANGE accessArray ======
+
 
 // $arr = [
-// 	'ok'=>['test'=>2],
-// 	'ok'=>['test'=>5],
-// 	'last'
+// 	'one' => [
+// 		'subone' => ['ok', 'not'],
+// 		'list'
+// 	],
+// 	'two' => 154,
+// 	'three' => 'ok'
 // ];
 
 
-// $compare = [
-// 	'ok'
-// ];
+// function __hash__($needle)
+// {
+// 	// $pattern = '.lmnopqrsrtuvzea';
+// 	// $outset = '';
 
-// var_dump(arraySearch($compare, $arrInsert ));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 	return $needle = ($needle + 1) / 3.14159265359; //PI
+// 	// $needle = (string) $needle;
+	
+// 	// for ($i=0, $length = strlen($needle); $i < $length; $i++) { 
+// 	// 	if (isset($pattern[$needle{$i}])) $outset .= $pattern[$needle{$i}];
+// 	// }
+// 	// return $outset;
+// }
 
 
 // $limit = 10000;
-
 // $begin = microtime(true);
 // for ($i=0; $i < $limit; $i++) { 
-// 	$d = hash('crc32', $i);
+// 	__hash__($i);
 // }
 // $end = microtime(true);
-// var_dump( 'METHOD 1 :: ' . ($end - $begin) );
+// var_dump($end - $begin);
+// var_dump(__hash__(154785.77410));
 
-/* FAST */
-// $d = [];//init
+// $limit = 10000;
 // $begin = microtime(true);
 // for ($i=0; $i < $limit; $i++) { 
-// 	$string = '.0a1b2c3d4f6g7h8i9j';
-// 	$d[] = str_pad((.5/($i+1)), 25, $string);
+// 	hash('crc32', $i);
 // }
 // $end = microtime(true);
-// var_dump('METHOD 2 :: ' . ($end - $begin) );
-// /* FAST */
-
-
-// $d = [];//init
-// $begin = microtime(true);
-// for ($i=0; $i < $limit; $i++) { 
-// 	$string = (.5/($i+1)) . '.0a1b2c3d4f6g7h8i9j';
-
-// 	$d[] = mb_substr($string, 0, 25);
-// }
-// $end = microtime(true);
-// var_dump('METHOD 2-1 :: ' . ($end - $begin) );
-
-
-// $d = [];//init
-// $begin = microtime(true);
-// for ($i=0; $i < $limit; $i++) { 
-// 	$string = (($i+1)/3.14159265359);
-// 	$d[] = ''.$string;
-
-// 	// $string = 'example';
-// 	// $d[] = @$string[5] . @$string[4] . @$string[1] . @$string[0] . @$string[3];
-// }
-// $end = microtime(true);
-// var_dump($d,'METHOD 2-1-1 :: ' . ($end - $begin) );
-
-// $begin = microtime(true);
-// for ($i=0; $i < $limit; $i++) { 
-// 	$d = strtolower(str_replace('=', '', base64_encode($i)));
-// }
-// $end = microtime(true);
-// var_dump( 'METHOD 3 :: ' . ($end - $begin) );	
+// var_dump($end - $begin);
+// var_dump(hash('crc32', $i));

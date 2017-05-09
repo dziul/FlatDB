@@ -1,1 +1,0 @@
-<?php exit(); ?>a:4:{i:0;a:2:{s:4:"name";s:13:"Cotton Hoodie";s:5:"price";i:48;}i:1;a:2:{s:4:"name";s:19:"Knit Hooded Sweater";s:5:"price";i:32;}i:2;a:2:{s:4:"name";s:13:"Hooded Jacket";s:5:"price";i:51;}i:3;a:2:{s:4:"name";s:22:"Premium Cotton T-Shirt";s:5:"price";i:23;}}

@@ -2,8 +2,8 @@
 
 namespace Darkziul;
 
-use Darkziul\Helpers\DotNotationArrayAccess as DNAA;
-use Darkziul\Helpers\Directory as directory;
+use Darkziul\DotNotationArrayAccess as DNAA;
+use Darkziul\Directory as directory;
 use \Exception as Exception;
 
 

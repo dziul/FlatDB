@@ -129,7 +129,7 @@ class DotNotationArrayAccess
 			
 		}
 
-		return  (($count-1) || $getKeyName) ?  $result : $result[0];
+		return  ($count-1 || $getKeyName) ?  $result : $result[0];
 		// return array_filter($result);
 	}
 
@@ -214,7 +214,7 @@ class DotNotationArrayAccess
 		for ($i=0; $i < $count; $i++) { 
 			$index = $keys[$i];
 
-			if ($index === '[+]') {
+			if ($index === '[+]' || $index === '+') {
 				$keysNew = array_slice($keys, $i+1); // pula a o proximo valor/chave
 				// var_dump($array);
 				foreach ($array as $_k => $_v) {
@@ -275,7 +275,7 @@ class DotNotationArrayAccess
 		for ($i=0; $i < $count; $i++) {
 			$index = $keys[$i];
 
-			if ($index === '[+]') {
+			if ($index === '[+]' || $index === '+') {
 				$keysNew = array_slice($keys, $i+1); // pula a o proximo valor/chave
 				// var_dump($array);
 				foreach ($array as $_k => $_v) {
@@ -327,7 +327,7 @@ class DotNotationArrayAccess
 	{
 		foreach ($key as $index => $k) {
 
-			if ($k === '[+]') {
+			if ($k === '[+]' || $k === '+') {
 				$pos = array_slice($key, $index+1);
 				$result = [];
 
@@ -340,7 +340,8 @@ class DotNotationArrayAccess
 						$result[] = (is_array($data) && isset($data[0])) ? $data[0] : $data;
 					}
 
-				}
+				}// END foreach
+
 				return array_filter($result);
 			}
 
@@ -360,18 +361,26 @@ class DotNotationArrayAccess
 
 	private static function engineOfLike($valueA, $valueB = null, $marker=false)
 	{
-		if(strpos($valueA, '$regex:') === 0) {
+		if(strpos($valueA, '$has//') === 0) { // igual
+			$valueA = self::returnPartString($valueA, 6); // '$has'  = 6 length
+			foreach ((array)$valueB as $value) {
+				if(self::highlightWords($value, $valueA, null, true)) return true;
+			}
+			return false;
+			
 
-			$pattern = trim(substr($valueA, 7)); // '$regex:'  = 7 length
+		} elseif(strpos($valueA, '$regex//') === 0) {
+
+			$pattern = self::returnPartString($valueA, 8); // '$regex:'  = 8 length
 			// if(!is_array($valueB)) return preg_match($pattern, $valueB);
 			foreach ((array)$valueB as $value) {
 				if(preg_match($pattern, $value)) return true;
 			}
 			return false;
 
-		} elseif(strpos($valueA, '$if:') === 0) {
+		} elseif(strpos($valueA, '$if//') === 0) {
 
-			$data = trim(substr($valueA, 4)); // '$if:' = 4 length
+			$data = self::returnPartString($valueA, 5); // '$if//' = 5 length
 			return self::conditionIfElse($data, $array);
 
 		}
@@ -380,18 +389,24 @@ class DotNotationArrayAccess
 	}
 
 
+
 	/**
-	 * Comibnar
-	 * @param type $str string
-	 * @param type $term termo a buscar
-	 * @param string $tagName Nome da Tag de marcacao
-	 * @return type
+	 * Retorna uma parte de uma string
+	 * @param type $string String
+	 * @param type $start Iniciar em
+	 * @return string
 	 */
-	private static function highlightTerm($str, $term, $tagName = 'strong') {
-	    $str = Normalizer::normalize($str, Normalizer::FORM_KD);
-	    // $pattern = '/('.preg_replace('/\p{L}/u', '$0\p{Mn}?', preg_quote($term, '/')).')/ui';
-	    return preg_replace($pattern, '<' . $tagName . '>$0</' . $tagName . '>', htmlspecialchars($str));
+	private static function returnPartString($string, $start = 0)
+	{
+		return trim(substr($string, $start));
 	}
+
+
+
+
+
+
+
 
 	/**
 	 * Condicao if e else
@@ -447,6 +462,32 @@ class DotNotationArrayAccess
 
 		}
 		else return null;
+	}
+
+
+
+
+
+	/**
+	 * Destacar Texto
+	 * 
+	 * @param type $str string
+	 * @param type $words palavra(s) a procurar e destacar
+	 * @param string $tagName Nome da Tag de marcacao
+	 * @param bool $ReturnOnlyExists TRUE retorna apenas Resultado da existencia da paralavra no string, True ou False.
+	 * @return mixed
+	 */
+	private static function highlightWords($str, $words, $tagName = 'span', $ReturnOnlyExists = false) {
+	    $str = \Normalizer::normalize($str, \Normalizer::FORM_KD);
+	    $pattern = '/('.preg_replace('/\p{L}/u', '$0\p{Mn}?', preg_quote($words, '/')).')/ui';
+
+	    $has = preg_match($pattern, htmlspecialchars($str));
+	    if($ReturnOnlyExists) {
+	    	return (bool)$has;
+	    }
+
+	    if(!$has) return false;
+	    return preg_replace($pattern, '<' . $tagName . '>$0</' . $tagName . '>', htmlspecialchars($str));
 	}
 
  }//END class

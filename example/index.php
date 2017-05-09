@@ -2,12 +2,11 @@
 
 require 'autoload.php';
 
-use Darkziul\Helpers\DotNotationArrayAccess as Arr;
-// use darkziul\Helpers\accessArrayElementUseEval as accessArrayElementUseEval;
+use Darkziul\DotNotationArrayAccess as Arr;
 use Darkziul\FlatDB;
 
 // $accessAE = new accessArrayElement();
-$flatdb = new FlatDB('_dataDB/');
+$flatdb = new FlatDB('.data.flat/');
 
 // var_dump( $flatdb->dbExists('example') );
 // var_dump( $flatdb->dbCreate('example') );
@@ -67,7 +66,8 @@ $flatdb = new FlatDB('_dataDB/');
 
 
 // SELECT =====
-// var_dump($flatdb->db('example')->table('default')->select()->where(['id' => 15])->execute());//selecionar
+var_dump($flatdb->db('example')->table('default')->select('who')->where(['who' => '$has// e'])->execute());//selecionar e retornar marcado
+// var_dump($flatdb->db('example')->table('default')->select()->where(['who' => '$regex// ~^s.*$~'])->execute());//selecionar com regex in where() 
 // var_dump($flatdb->db('example')->table('default')->select('group.a')->execute());//selecionar apenas who (todos)
 // var_dump($flatdb->db('example')->table('default')->select(['group.a','unid'])->execute());//selecionar apenas 'group.a' e 'unid'
 // var_dump($flatdb->db('example')->table('default')->select(['group.a','unid', 'who'])->order('asc', 'who')->execute());//selecionar apenas 'group.a', 'unid' e 'who'. ordernar por 'who' em desc
@@ -183,12 +183,7 @@ $arr = [
 // var_dump(Arr::exists($arr, 'main.1.category')); //saber se existe a chave   outset::FALSE
 // var_dump(Arr::exists($arr, 'main.0.category.tag','$if: > 5')); // saber se existe e seu valor [checa se o valor procurado eh string|Array]
 
-$str = 'Guía de usuario ICU - Normalización!';
-$term = 'i';
-$str = Normalizer::normalize($str, Normalizer::FORM_KD);
-$pattern = '/('.preg_replace('/\p{L}/u', '$0\p{Mn}?', preg_quote($term, '/')).')/ui';
 
-var_dump( preg_replace($pattern, '<strong>$0</strong>', htmlspecialchars($str)) );
 
 // var_dump(Arr::exists($arr, ['main.1.category.code', 'main.0.category.name'])); //saber se existe o grupo de chaves. No loop caso a chave atual nao existir, retorna false e para o loop
 // var_dump(Arr::exists($arr, ['main.0.category.name'=>'lima'])); //saber se existe o grupo de chaves com valores. No loop caso a chave atual 
@@ -250,13 +245,3 @@ var_dump( preg_replace($pattern, '<strong>$0</strong>', htmlspecialchars($str)) 
 // $end = microtime(true);
 // var_dump($end - $begin);
 // var_dump(hash('crc32', $i));
-
-
-function highlightTerm($str, $term, $tagName = 'strong') {
-	    $str = Normalizer::normalize($str, Normalizer::FORM_KD);
-	    return preg_replace($term, '<' . $tagName . '>$0</' . $tagName . '>', $str);
-	}
-
-
-
-var_dump(highlightTerm('sinal diacrítico, gráfico, com q', '/grafico/ui'));

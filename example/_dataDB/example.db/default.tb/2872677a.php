@@ -1,1 +1,0 @@
-<?php return header("HTTP/1.0 404 Not Found"); exit(); //Negar navegação | Deny navigation ?>{"who":"self","uniqid":"2633859016db22b3a95.40070645","number":64,"group":{"a":"0.88990647","b":"9.31724191","c":"8.62186266"},"unid":15,"collection":{"item":{"group":{"test":{"0":51,"1":2,"2":5,"gnulid":999}},"id":"$2y$10$c4j6jxqvckhmjgmnx233z.2genl9a0fjm9rwj1thnxzlh.i2\/acpw"}},"id":34}

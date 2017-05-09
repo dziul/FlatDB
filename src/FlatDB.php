@@ -351,13 +351,18 @@ class FlatDB
 		return $this; //encadeamento
 	}
 
-	public function select($key=null)
+	/**
+	 * Selecionar
+	 * @param type|null $key selecionar "coluna"
+	 * @return this
+	 */
+	public function select($key = null)
 	{
 		$this->query['select'] = (array)$key;
 
 		$this->prepareSet('select');
 
-		return $this;
+		return $this; //encadeamento
 	}
 
 
@@ -546,8 +551,8 @@ class FlatDB
 
         $indexes = $this->getMeta('indexes');
 
-        if (empty($indexes)) return null;//
 
+        if (empty($indexes)) return null;//
         // $data = [];// init data
         //condicao where ====
         if ($emptyWhere = empty($where) && !$hasCache) {
@@ -555,7 +560,6 @@ class FlatDB
         		$data = $this->read($this->getBaseNameFile($id));
         		$result[$id] = empty($select) ? $data : DNAA::get($data, $select, true);
         	}
-        	
 
         } elseif (!$emptyWhere && !$hasCache) {
         	if (isset($where['id'])) {
@@ -565,7 +569,8 @@ class FlatDB
         	}
         	foreach ($indexes as $id) {
     			$data = $this->read($this->getBaseNameFile($id));
-    			if (DNAA::exists($data, $where)) $result[$id] = empty($select) ? $data : DNAA::get($data, $select, true);
+    			// if (DNAA::exists($data, $where)) $result[$id] = empty($select) ? $data : DNAA::get($data, $select, true);
+    			if (DNAA::exists($data, $where)) $result[] = empty($select) ? $data : DNAA::get($data, $select, true);
     		}
         }
 

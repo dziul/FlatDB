@@ -23,14 +23,14 @@ flatDB é um banco de dados baseado em armazenamento ***multi-level file flat***
         |- users.tb/ (diretorio Table)
             |- .cache/ (diretorio Cache)
             |- .metadata.php (arquivo metadados)
-            |- 0.63661977236754i1.php (documento)
-            |- 0.95492965855131i2.php (documento)
+            |- 1b945f59.php (documento)
+            |- 1c845f70.php (documento)
             |- [...]
         |- products.tb/ (diretorio Table)
             |- .cache/ (diretorio Cache)
             |- .metadata.php (arquivo metadados)
-            |- 0.63661977236754i1.php (documento)
-            |- 0.95492965855131i2.php (documento)
+            |- 5d4b7cae.php (documento)
+            |- 5d25472c.php (documento)
             |- [...]
 ```
 

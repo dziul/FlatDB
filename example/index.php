@@ -1,4 +1,4 @@
-	<?php
+<?php
 
 require 'autoload.php';
 
@@ -66,8 +66,10 @@ $flatdb = new FlatDB('.data.flat/');
 
 
 // SELECT =====
-var_dump($flatdb->db('example')->table('default')->select('who')->where(['who' => '$has// e'])->execute());//selecionar e retornar marcado
-// var_dump($flatdb->db('example')->table('default')->select()->where(['who' => '$regex// ~^s.*$~'])->execute());//selecionar com regex in where() 
+var_dump($flatdb->db('example')->table('default')->select(['group.a','group.b'])->where(['group.a' => '$mark 5'])->execute());//selecionar e retornar marcado
+// var_dump($flatdb->db('example')->table('default')->select('who')->where(['who' => '$not par'])->execute());//selecionar e retornar marcado
+// var_dump($flatdb->db('example')->table('default')->select()->where(['who' => '$regex ~^s.*$~'])->execute());//selecionar com regex in where() 
+// var_dump($flatdb->db('example')->table('default')->select()->where(['unid' => '$if >16'])->execute());//selecionar com regex in where() 
 // var_dump($flatdb->db('example')->table('default')->select('group.a')->execute());//selecionar apenas who (todos)
 // var_dump($flatdb->db('example')->table('default')->select(['group.a','unid'])->execute());//selecionar apenas 'group.a' e 'unid'
 // var_dump($flatdb->db('example')->table('default')->select(['group.a','unid', 'who'])->order('asc', 'who')->execute());//selecionar apenas 'group.a', 'unid' e 'who'. ordernar por 'who' em desc

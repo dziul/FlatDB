@@ -117,21 +117,40 @@ class DotNotationArrayAccess
 	 * @param type|bool $getKeyName TRUE o resultado terá o nome da chave <code>['main.code' => 15]</code>, FALSE não mostrrá o nome <code>[0 => 15]</code>
 	 * @return Mi
 	 */
-	public static function get(array $array, $keys=null, $getKeyName=false)
+	public static function get(array $array, $keys=null, $getKeyName=false, $mark=null)
 	{
 		if (!isset($keys)) return $array;
 		$keys = (array) $keys;
 		$count = count($keys);
 		$result = [];
 		foreach ($keys as $key) {
-			if ($getKeyName) $result[$key] = self::engineOfGet($array, self::dotToArray($key));
-			else $result[] = self::engineOfGet($array, self::dotToArray($key));
+
+			$content = self::engineOfGet($array, self::dotToArray($key));
+
+			if(!empty($mark)) {
+
+				$fn = function($str) use ($mark) {
+						return self::mark($str, $mark);
+					};
+
+				if(is_array($content)) {
+					$content = self::arrayMapRecursive($fn, $content);
+				}
+
+				$content = $fn($content);
+			}
+
+
+
+			if ($getKeyName) $result[$key] = $content;
+			else $result[] = $content;
 			
 		}
 
 		return  ($count-1 || $getKeyName) ?  $result : $result[0];
 		// return array_filter($result);
 	}
+
 
 	public static function create(&$keyAndValue, $value=null, &$array = [])
 	{
@@ -328,7 +347,7 @@ class DotNotationArrayAccess
 		foreach ($key as $index => $k) {
 
 			if ($k === '[+]' || $k === '+') {
-				$pos = array_slice($key, $index+1);
+				$pos = array_slice($key, $index + 1);
 				$result = [];
 
 				foreach ($array as $_v) {
@@ -353,6 +372,8 @@ class DotNotationArrayAccess
 			if($valueCompare{0} !== '$') {
 				return in_array($valueCompare, (array)$array);
 			}
+
+
 			return self::engineOfLike($valueCompare, $array);
 		}
 		return $array;
@@ -361,27 +382,36 @@ class DotNotationArrayAccess
 
 	private static function engineOfLike($valueA, $valueB = null, $marker=false)
 	{
-		if(strpos($valueA, '$has//') === 0) { // igual
-			$valueA = self::returnPartString($valueA, 6); // '$has'  = 6 length
+
+		if(strpos($valueA, '$has') === 0) { // igual
+			$valueA = self::returnPartString($valueA, 4); // '$has'  = 4 length
 			foreach ((array)$valueB as $value) {
 				if(self::highlightWords($value, $valueA, null, true)) return true;
 			}
 			return false;
 			
 
-		} elseif(strpos($valueA, '$regex//') === 0) {
+		} elseif(strpos($valueA, '$not') === 0) { // igual
+			$valueA = self::returnPartString($valueA, 4); // '$not'  = 4 length
+			foreach ((array)$valueB as $value) {
+				if(!self::highlightWords($value, $valueA, null, true)) return true;
+			}
+			return false;
+			
 
-			$pattern = self::returnPartString($valueA, 8); // '$regex:'  = 8 length
+		} elseif(strpos($valueA, '$regex') === 0) {
+
+			$pattern = self::returnPartString($valueA, 6); // '$regex'  = 6 length
 			// if(!is_array($valueB)) return preg_match($pattern, $valueB);
 			foreach ((array)$valueB as $value) {
 				if(preg_match($pattern, $value)) return true;
 			}
 			return false;
 
-		} elseif(strpos($valueA, '$if//') === 0) {
+		} elseif(strpos($valueA, '$if') === 0) {
 
-			$data = self::returnPartString($valueA, 5); // '$if//' = 5 length
-			return self::conditionIfElse($data, $array);
+			$valueA = self::returnPartString($valueA, 3); // '$if' = 3 length
+			return self::conditionIfElse($valueA, $valueB);
 
 		}
 		return null;
@@ -396,7 +426,7 @@ class DotNotationArrayAccess
 	 * @param type $start Iniciar em
 	 * @return string
 	 */
-	private static function returnPartString($string, $start = 0)
+	public static function returnPartString($string, $start = 0)
 	{
 		return trim(substr($string, $start));
 	}
@@ -465,9 +495,6 @@ class DotNotationArrayAccess
 	}
 
 
-
-
-
 	/**
 	 * Destacar Texto
 	 * 
@@ -478,6 +505,7 @@ class DotNotationArrayAccess
 	 * @return mixed
 	 */
 	private static function highlightWords($str, $words, $tagName = 'span', $ReturnOnlyExists = false) {
+
 	    $str = \Normalizer::normalize($str, \Normalizer::FORM_KD);
 	    $pattern = '/('.preg_replace('/\p{L}/u', '$0\p{Mn}?', preg_quote($words, '/')).')/ui';
 
@@ -486,8 +514,57 @@ class DotNotationArrayAccess
 	    	return (bool)$has;
 	    }
 
-	    if(!$has) return false;
-	    return preg_replace($pattern, '<' . $tagName . '>$0</' . $tagName . '>', htmlspecialchars($str));
+	    if(!$has) return $str;
+
+	    $tagOpen = '<' . $tagName . ' class="mark">';
+	    $tagFinish = '</' . $tagName . '>';
+
+	    return preg_replace($pattern, $tagOpen . '$0' . $tagFinish, htmlspecialchars($str));
+	}
+
+	/**
+	 * Sinonimo de self::highlightWords() 
+	 * @param string $str 
+	 * @param string $words 
+	 * @param string $tagName 
+	 * @return mixed
+	 */
+	public static function mark($str, $words, $tagName = 'span') {
+		return self::highlightWords($str, $words, $tagName, false);
+	}
+
+
+
+
+	/**
+	 * Executar uma função a cada elemento da array
+	 * @param callable $callback Um callback ou Array de callback @example 'strtolower' ou array('strtolower', 'trim')
+	 * @param array $array  Array base
+	 * @param bool $alsoTheKey TRUE executa a funcao também na chaves. FALSE executa apenas no valor
+	 * @return array
+	 */
+	private static function arrayMapRecursive($callback, array $array, $alsoTheKey=false)
+	{
+		$callback = (array)$callback; //force to array
+		$result = [];
+		foreach ($array as $key => $value) {
+
+			if(is_array($callback)) {
+				foreach ($callback as $fn) {
+					if ($alsoTheKey) $key = $fn($key);
+				}
+			}
+
+			if (is_array($value)) $result[$key] = self::arrayMapRecursive($callback, $value, $alsoTheKey);
+			else {
+				for ($i=0, $c = count($callback); $i < $c; $i++) { 
+					$value = $callback[$i]($value);
+				}
+				$result[$key] = $value;
+				
+			}
+		}
+		return $result;
 	}
 
  }//END class

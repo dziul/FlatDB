@@ -536,6 +536,16 @@ class FlatDB
     	$limit  	= $this->query['limit'];
 
 
+    	
+    	//procurar $mark e substituir por $has e setar var $mark=true
+    	$mark = null; //init
+    	foreach ((array)$where as $key => $value) {
+    		if(strpos($value, '$mark') === 0) {
+    			$where[$key] = str_replace('$mark', '$has', $value);
+    			$mark = DNAA::returnPartString($value, 5); // 5 = $mark
+    		}  
+    	}
+
 
     	// var_dump($this->like($where));
 
@@ -567,10 +577,14 @@ class FlatDB
         		$indexes = (array)$where['id'];
         		unset($where['id']);	
         	}
+
         	foreach ($indexes as $id) {
     			$data = $this->read($this->getBaseNameFile($id));
-    			// if (DNAA::exists($data, $where)) $result[$id] = empty($select) ? $data : DNAA::get($data, $select, true);
-    			if (DNAA::exists($data, $where)) $result[] = empty($select) ? $data : DNAA::get($data, $select, true);
+
+    			if (DNAA::exists($data, $where)) {
+    				$result[$id] = empty($select) ? $data : DNAA::get($data, $select, true, $mark);
+    			}
+    			// if (DNAA::exists($data, $where)) $result[] = empty($select) ? $data : DNAA::get($data, $select);
     		}
         }
 
@@ -582,6 +596,7 @@ class FlatDB
 
     	if ($limit > 0)  $result = array_slice($result, $offset, $limit, true);
     	elseif ($offset > 0) $result = array_slice($result, $offset, true);
+
         return $result;
 	}
 
@@ -963,36 +978,7 @@ class FlatDB
 	 */
 
 
-	/**
-	 * Executar uma função a cada elemento da array
-	 * @param callable $callback Um callback ou Array de callback @example 'strtolower' ou array('strtolower', 'trim')
-	 * @param array $array  Array base
-	 * @param bool $alsoTheKey TRUE executa a funcao também na chaves. FALSE executa apenas no valor
-	 * @return array
-	 */
-	private function arrayMapRecursive($callback, array $array, $alsoTheKey=false)
-	{
-		$callback = (array)$callback; //force to array
-		$result = [];
-		foreach ($array as $key => $value) {
-
-			if(is_array($callback)) {
-				foreach ($callback as $fn) {
-					if ($alsoTheKey) $key = $fn($key);
-				}
-			}
-
-			if (is_array($value)) $result[$key] = $this->arrayMapRecursive($callback, $value, $alsoTheKey);
-			else {
-				for ($i=0, $c = count($callback); $i < $c; $i++) { 
-					$value = $callback[$i]($value);
-				}
-				$result[$key] = $value;
-				
-			}
-		}
-		return $result;
-	}
+	
 
 	/**
 	 * deixar lowerCase os elementos da array
@@ -1007,7 +993,7 @@ class FlatDB
 			return mb_strtolower(trim($string), 'UTF-8');
 		};
 
-		return $this->arrayMapRecursive($fn, $haystack, true);
+		return DNAA::arrayMapRecursive($fn, $haystack, true);
 	}
 
 

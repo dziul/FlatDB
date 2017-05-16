@@ -148,7 +148,7 @@ Selecionar a tabela para consulta.
 ### `insert($array)`
 | $flatdb->db($dbname)->table($tbname)->insert($array)->execute();
 
-Adicionar uma novo documento
+Adicionar um novo documento
 
 * **$array** Array a ser adicionada no novo documento
 

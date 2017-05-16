@@ -73,6 +73,7 @@ composer require "darkziul/flatdb"
 
 
 ### `new FlatDB()`
+
 > new FlatDB($dirInit [, $create = false])
 
 Instância
@@ -96,6 +97,7 @@ $flatdb = new FlatDB('data2/');
 
 
 ### `db()`
+
 > $flatdb->db($name [, $create = false])
 
 Selecionar o banco de dados para consulta.
@@ -114,6 +116,7 @@ Selecionar o banco de dados para consulta.
 ```
 
 ### `table()`
+
 > $flatdb->db($dbname)->table($name [, $create = false])
 
 Selecionar a tabela para consulta.
@@ -136,6 +139,7 @@ Selecionar a tabela para consulta.
 ```
 
 ### `insert()`
+
 > $flatdb->db($dbname)->table($tbname)->insert($array)->execute();
 
 Adicionar um novo documento
@@ -160,7 +164,9 @@ Adicionar um novo documento
 ```
 
 ### `delete()`
+
 > $flatdb->db($dbname)->table($tbname)->delete($id)->execute();
+
 > $flatdb->db($dbname)->table($tbname)->delete($id)->where($condition)->execute();
 
 Deleta o $id(s), retorna o valor de quantos $id foram deletados
@@ -179,8 +185,11 @@ Deleta o $id(s), retorna o valor de quantos $id foram deletados
 ```
 
 ### `update()`
-> $flatdb->db($dbname)->table($tbname)->update($key, $value)->execute(); ou 
+
+> $flatdb->db($dbname)->table($tbname)->update($key, $value)->execute();
+
 > $flatdb->db($dbname)->table($tbname)->update($array)->execute();
+
 > $flatdb->db($dbname)->table($tbname)->update($key, $value)->where($condition)->execute(); [atualizar usando condição]
 
 Atualizar $key com o valor $value

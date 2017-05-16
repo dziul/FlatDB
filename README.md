@@ -82,22 +82,25 @@ Sintaxe a ser seguida: **(instância)->(banco de dados)->(tabela)->(ação)->(ex
 
 
 
-### Instância:
-```php 
-$fdb = new FlatDB($dirInit); //diretorio onde será salvo os bancos de dados
-```
+## Instância:
 
-**$dirInit** (string): precisa começar sem e terminar com `/`. Exemplo: `data/`
+#### new FlatDB($dirInit [, $create = false])
+| $fdb = new FlatDB($dirInit, $create);
 
-Se não for adicionado nenhum valor será considerado o caminho padrão, que é diretório raiz:  `$_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/' . $nameDataDBdefault . '/'`, algo como `www/_data.flatdb/`
+* **$dirInit** (string): precisa começar sem e terminar com `/`. Exemplo: `data/`. Se não for declarada nenhum valor, será considerado o caminho padrão da `class FlatDB`.
+* **$create** `true` caso o diretório não exista, força sua criação. `false` é o padrão.
 
 ```php
 $flatdb = new FlatDB();
 // igual à $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/_data.flatdb/', algo como www/_data.flatdb/
 ```
 ```php
-$flatdb = new FlatDB('data/'); 
+
+$flatdb = new FlatDB('data/', true); 
 //Caso não exista... será criado, nesse exemplo será criado no diretorio que está sendo executado o código
+
+$flatdb = new FlatDB('data2/');
+//caso não exista emite um erro fatal
 ```
 
 

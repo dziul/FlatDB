@@ -75,15 +75,19 @@ class FlatDB
 	/**
 	 * construtor
 	 * @param string|null $dirInit  Diretorio do armazenamento dos arquivos
-	 * @return type
+	 * @param bool TRUE criação forçada caso não exista o diretorio. FALSE é padrão
+	 * @return void
 	 */
-	public function __construct($dirInit = null) {
+	public function __construct($dirInit = null, $create = false) {
 
 		$this->directoryInstance = new directory();
 
 		$nameDataDBdefault = '_data.flatdb';
 		$this->db['basePath'] = is_null($dirInit) ? $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/' . $nameDataDBdefault . '/' : $dirInit;
-		$this->directoryInstance->create($this->db['basePath']);//cria o dir
+
+		if($create) $this->directoryInstance->create($this->db['basePath']);//cria o dir
+		elseif(!$this->directoryInstance->has($this->db['basePath'])) throw new Exception(sprintf('O caminho principal %s não existe!', $this->db['basePath']));
+		
 
 
 		$this->strlenDenyAccess = strlen($this->strDenyAccess); //calcular o tamanho da string

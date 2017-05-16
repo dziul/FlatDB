@@ -78,8 +78,8 @@ composer require "darkziul/flatdb"
 
 
 
-### `new FlatDB($dirInit [, $create = false])`
-| $fdb = new FlatDB($dirInit, $create);
+### `new FlatDB()`
+| new FlatDB($dirInit [, $create = false])
 
 Instância
 
@@ -101,8 +101,8 @@ $flatdb = new FlatDB('data2/');
 
 
 
-### `db($name [, $create = false])`
-| $flatdb->db($dbname)
+### `db()`
+| $flatdb->db($name [, $create = false])
 
 Selecionar o banco de dados para consulta.
 
@@ -119,8 +119,8 @@ Selecionar o banco de dados para consulta.
     $flatdb->db('example', true); // this - selecionar; caso nao exista é criado
 ```
 
-### `table($name [, $create = false])`
-| $flatdb->db($dbname)->$table($tbname)
+### `table()`
+| $flatdb->db($dbname)->table($name [, $create = false])
 
 Selecionar a tabela para consulta.
 
@@ -141,7 +141,7 @@ Selecionar a tabela para consulta.
     $flatdb->db('example')->table('default', true); //this - Selecionar a tabela, caso não exista será criada
 ```
 
-### `insert($array)`
+### `insert()`
 | $flatdb->db($dbname)->table($tbname)->insert($array)->execute();
 
 Adicionar um novo documento
@@ -165,9 +165,9 @@ Adicionar um novo documento
     //return 
 ```
 
-### `delete($id)`
-| $flatdb->db($dbname)->table($tbname)->delete(array|int)->execute();
-| $flatdb->db($dbname)->table($tbname)->delete(array|int)->where($condition)->execute();
+### `delete()`
+| $flatdb->db($dbname)->table($tbname)->delete($id)->execute();
+| $flatdb->db($dbname)->table($tbname)->delete($id)->where($condition)->execute();
 
 Deleta o $id(s), retorna o valor de quantos $id foram deletados
 
@@ -184,8 +184,9 @@ Deleta o $id(s), retorna o valor de quantos $id foram deletados
     $flatdb->db('example')->table('default')->delete(8)->where(['who' => 'parent', 'number' => 5])->execute(); // int - returna a quantidade deletada
 ```
 
-### `update($key, $value)` ou `update($array)`
-| $flatdb->db($dbname)->table($tbname)->update($key, $value)->execute();
+### `update()`
+| $flatdb->db($dbname)->table($tbname)->update($key, $value)->execute(); ou 
+| $flatdb->db($dbname)->table($tbname)->update($array)->execute();
 | $flatdb->db($dbname)->table($tbname)->update($key, $value)->where($condition)->execute(); [atualizar usando condição]
 
 Atualizar $key com o valor $value

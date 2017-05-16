@@ -1,6 +1,5 @@
-### developing
-=======
-# FlatDB (em desenvolvimento)
+
+# FlatDB
 flatDB é um banco de dados baseado em armazenamento ***multi-level file flat***. Uma ótima solução quando não há nenhum outro banco de dados disponível.
 
 
@@ -16,7 +15,8 @@ flatDB é um banco de dados baseado em armazenamento ***multi-level file flat***
 - Protegido contra  *access from web-browser* por URL
 
 
-##### estrutura de como é salvo os dados
+**Estrutura de como é salvo os dados:**
+
 ```
 |- _data.flatdb/ (diretorio principal)
     |- example.db/ (diretorio Database)
@@ -32,8 +32,197 @@ flatDB é um banco de dados baseado em armazenamento ***multi-level file flat***
             |- 5d4b7cae.php (documento)
             |- 5d25472c.php (documento)
             |- [...]
+    |- example2.db/(diretorio Database)
+        |- sunday.tb/ (diretorio Table)
+            |- [...]
+```
+
+## Instalação
+
+Se ja possui o arquivo [`composer.json`](https://getcomposer.org/), basta adicionar a seguinte dependência ao seu projeto:
+```json
+{
+    "require": {
+        "darkziul/flatdb": "1.*"
+    }
+}
+```
+
+Com a dependência adicionada, basta executar:
+
+```
+composer install
+```
+
+Alternativamente, você pode executar diretamente em seu terminal:
+
+```
+composer require "darkziul/flatdb"
+```
+
+## Iniciando
+
+FlatDB usa-se **Encadeamento de métodos**, exemplo:
+
+`$fdb->db('test')->table('product')->select('name')->where(['type' => 'tv'])->execute();`
+
+
+Sintaxe a ser seguida: **(instância)->(banco de dados)->(tabela)->(ação)->(executar/gerar)**
+| $instance->db->table->...->execute()
+
+
+* modo errado: **(instância)->(tabela)->(ação)->(executar/gerar)** 
+
+>  Fatal Error: Nao ha database para consulta!
+
+* modo errado: **(instância)->(banco de dados)->(ação)->(executar/gerar)** 
+
+> Fatal Error: Nao ha tabela para consulta!
+
+
+
+
+### Instância:
+```php 
+$fdb = new FlatDB($dirInit); //diretorio onde será salvo os bancos de dados
+```
+
+**$dirInit** (string): precisa começar sem e terminar com `/`. Exemplo: `data/`
+
+Se não for adicionado nenhum valor será considerado o caminho padrão, que é diretório raiz:  `$_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/' . $nameDataDBdefault . '/'`, algo como `www/_data.flatdb/`
+
+```php
+$flatdb = new FlatDB();
+// igual à $_SERVER['CONTEXT_DOCUMENT_ROOT'] . '/_data.flatdb/', algo como www/_data.flatdb/
+```
+```php
+$flatdb = new FlatDB('data/'); 
+//Caso não exista... será criado, nesse exemplo será criado no diretorio que está sendo executado o código
 ```
 
 
-##### Segurança
-Caso for usar algo confidencial como ***password***, criptografá-la (criar uma *hash*). Utilize `password_hash()` -[doc](http://php.net/manual/en/function.password-hash.php)-, ao invés de  `md5()` ou `sha1()` (não são funções seguras para *hash*). *Isso é para a vida*
+
+### `db($name [, $create = false])`
+| $flatdb->db($dbname)
+
+Selecionar o banco de dados para consulta.
+
+* **$name** Nome do Banco
+* **$create** `true` Caso o banco de dados $name não existir será criado. `false` é o padrão
+
+**Seus derivados**
+```php
+    $flatdb->dbExists('example'); // bool - saber se existe o db
+    $flatdb->dbCreate('example'); // bool - criar o db
+    $flatdb->dbDelete('example'); // bool - deletar o db
+
+    $flatdb->db('example'); // FatalError | this - selecionar o db
+    $flatdb->db('example', true); // this - selecionar; caso nao exista é criado
+```
+
+### `table($name [, $create = false])`
+| $flatdb->db($dbname)->$table($tbname)
+
+Selecionar a tabela para consulta.
+
+* **$name** Nome da tabela
+* **$create** `true` Caso a tabela $name não existir, será criado. `false` é o padrão
+
+**Seus derivados**
+```php
+    $flatdb->db('example')->tableShow($json = false); // array|string - retorna todos os nomes das tabelas
+    //return 
+    //[0  => 'default.tb', 'length' =>  1]
+
+    $flatdb->db('example')->tableExists('default'); //bool - Saber se existe a tabela
+    $flatdb->db('example')->tableDelete('default'); //bool - Deletar a Tabela
+    $flatdb->db('example')->tableCreate('default'); //bool - Criar a tabela
+
+    $flatdb->db('example')->table('default'); // FatalError | this - Selecionar a tabela, caso exista
+    $flatdb->db('example')->table('default', true); //this - Selecionar a tabela, caso não exista será criada
+```
+
+### `insert($array)`
+| $flatdb->db($dbname)->table($tbname)->insert($array)->execute();
+
+Adicionar uma novo documento
+
+* **$array** Array a ser adicionada no novo documento
+
+```php
+    $whoArr = [' PARENT ', 'Self', 'OthEr', ' ChilD    '];
+    $arrInsert = [
+        'who'=> $whoArr[mt_rand(0, count($whoArr)-1)],
+        'uniqid'=> uniqid(rand(),true),
+        ' NUMBER '=>rand(0,90),
+        'GrouP.a     '=> substr(uniqid(rand(),true), -10),
+        'group.b'=> substr(uniqid(rand(),true), -10),
+        'group.c'=> substr(uniqid(rand(),true), -10),
+        'unid' => 15,
+        'collection.item.group' => ['TEST' => [51, 2, 5, ' GnulId' => 999]],
+        'collection.item.id' => password_hash(uniqid(rand(),true), PASSWORD_DEFAULT)
+    ]; 
+    $flatdb->db('example')->table('default')->insert($arrInsert)->execute(); // array | null
+    //return 
+```
+
+### `delete($id)`
+| $flatdb->db($dbname)->table($tbname)->delete(array|int)->execute();
+| $flatdb->db($dbname)->table($tbname)->delete(array|int)->where($condition)->execute();
+
+Deleta o $id(s), retorna o valor de quantos $id foram deletados
+
+* **$id**(array|int) Id ou grupo de ids que serão deletados.
+
+```php
+    $flatdb->db('example')->table('default')->delete(15)->execute(); // int | fatalError - Deleta o Id mencionado
+    $flatdb->db('example')->table('default')->delete([5, 10, 9])->execute(); // int | fatalError - Deleta os Ids mencionados
+
+    //deeltar todos os documentos que tiverem os valores de where() ===
+    $flatdb->db('example')->table('default')->delete()->where(['who' => 'parent', 'number' => 5])->execute(); // int - returna a quantidade deletada
+
+    //deletar o $id caso tenha os valores de where() ===
+    $flatdb->db('example')->table('default')->delete(8)->where(['who' => 'parent', 'number' => 5])->execute(); // int - returna a quantidade deletada
+```
+
+### `update($key, $value)` ou `update($array)`
+| $flatdb->db($dbname)->table($tbname)->update($key, $value)->execute();
+| $flatdb->db($dbname)->table($tbname)->update($key, $value)->where($condition)->execute(); [atualizar usando condição]
+
+Atualizar $key com o valor $value
+
+* **$key** Chave que receberá o novo valor.
+* **$value** O novo valor
+* **$array** Modo alternativo para atualizar vários $key. Grupo de: chave => NovoValor
+
+```php
+    //irá atualizar a chave 'who' de todos os documentos
+    $flatdb->db('example')->table('default')->update(['who' => 'Xchild'])->execute(); //bool - atualizar grupado
+    $flatdb->db('example')->table('default')->update('who', 'Xchild')->execute();// bool - atualizar simples
+
+
+    //usando where ====
+    // irá atualizar 'who' apenas dos documetos que tiverem os valores de where() ===
+    $flatdb->db('example')->table('default')->update('who', 'Xchild')->where(['id'=>[5,16]])->execute(); // bool - Atualizar 1 
+    $flatdb->db('example')->table('default')->update(['who' => 'Xchild', 'group.b' => 154])->where(['id'=>[5,16]])->execute(); //bool - atualizar vários $key
+```
+
+
+
+** [escrevendo ....] **
+
+
+
+
+
+#### Changelog
+```
+v1.5.0
+v1.0.0 - lançamento
+```
+
+
+#### Segurança
+Caso for usar algo confidencial como ***password***, precisa-se criptografá-la (*hash*). Utilize `password_hash()` -[doc](http://php.net/manual/en/function.password-hash.php)-, ao invés de  `md5()` ou `sha1()` (não são funções seguras para *hash*). *Isso é para a vida*
+
+

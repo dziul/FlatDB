@@ -9,7 +9,7 @@ use Darkziul\FlatDB;
 $flatdb = new FlatDB('.data.flat/');
 
 // var_dump( $flatdb->dbExists('example') );
-// var_dump( $flatdb->dbCreate('example') );
+// var_dump( $flatdb->dbCreate('examples') );
 // var_dump( $flatdb->db('example') );
 // var_dump($flatdb->db('example', true));// //cria database caso nao exista
 // var_dump( $flatdb->dbDelete('example') );
@@ -25,18 +25,18 @@ $flatdb = new FlatDB('.data.flat/');
 
 // $whoArr = [' PARENT ', 'Self', 'OthEr', ' ChilD    '];
 // for ($i=0; $i < 100 ; $i++) {
-// 	$arrInsert = [
-// 		'who'=> $whoArr[mt_rand(0, count($whoArr)-1)],
-// 		'uniqid'=> uniqid(rand(),true),
-// 		' NUMBER '=>rand(0,90),
-// 		'GrouP.a     '=> substr(uniqid(rand(),true), -10),
-// 		'group.b'=> substr(uniqid(rand(),true), -10),
-// 		'group.c'=> substr(uniqid(rand(),true), -10),
-// 		'unid' => 15,
-// 		'collection.item.group' => ['TEST' => [51, 2, 5, ' GnulId' => 999]],
-// 		'collection.item.id' => password_hash(uniqid(rand(),true), PASSWORD_DEFAULT)
-// 	]; 
-// 	$flatdb->db('example')->table('default')->insert($arrInsert)->execute();
+	// $arrInsert = [
+	// 	'who'=> $whoArr[mt_rand(0, count($whoArr)-1)],
+	// 	'uniqid'=> uniqid(rand(),true),
+	// 	' NUMBER '=>rand(0,90),
+	// 	'GrouP.a     '=> substr(uniqid(rand(),true), -10),
+	// 	'group.b'=> substr(uniqid(rand(),true), -10),
+	// 	'group.c'=> substr(uniqid(rand(),true), -10),
+	// 	'unid' => 15,
+	// 	'collection.item.group' => ['TEST' => [51, 2, 5, ' GnulId' => 999]],
+	// 	'collection.item.id' => password_hash(uniqid(rand(),true), PASSWORD_DEFAULT)
+	// ]; 
+	// $flatdb->db('example')->table('default')->insert($arrInsert)->execute()
 // }
 
 // var_dump($flatdb->db('example')->table('default')->insert([' Test ' => null, false, '', 5.2100])->execute());//create
@@ -51,22 +51,25 @@ $flatdb = new FlatDB('.data.flat/');
 // var_dump($end - $begin);
 
 
-// var_dump($flatdb->db('example')->table('default')->put(['collection.item.yers' => 15])->execute());//add (chave&valor) caso nao exista a chave
-// var_dump($flatdb->db('example')->table('default')->put(['collection.item.yers' => 15], true)->execute());//add e mescla valor (caso ja exista o valor)
-// var_dump($flatdb->db('example')->table('default')->put(['collection.users.password'=>02115])->where(['who'=>'child'])->execute());//add item
+// var_dump($flatdb->db('example')->table('default')->add(['collection.item.yers' => 15])->execute());//add (chave&valor) caso nao exista a chave
+// var_dump($flatdb->db('example')->table('default')->add(['collection.item.yers' => 15], true)->execute());//add e mescla valor (caso ja exista o valor)
+// var_dump($flatdb->db('example')->table('default')->add(['collection.users.password'=>02115])->where(['who'=>'child'])->execute());//add item
 
 
 
 //CHANGE ======
 // var_dump($flatdb->db('example')->table('default')->update(['who'=>'Xchild'])->where(['id'=>[5,16]])->execute());// atualizar valor
-
+// var_dump($flatdb->db('example')->table('default')->update('who', 'Xchild')->where(['id'=>[5,16]])->execute());// atualizar valor
 
 
 
 
 
 // SELECT =====
-var_dump($flatdb->db('example')->table('default')->select(['group.a','group.b'])->where(['group.a' => '$mark 5'])->execute());//selecionar e retornar marcado
+
+// var_dump($flatdb->db('example')->table('defaults')->select('who')->where(['who' => '$not par'])->execute());//selecionar e retornar marcado
+
+// var_dump($flatdb->db('example')->table('default')->select(['group.a','group.b'])->where(['group.b' => '$has 00'])->execute());//selecionar e retornar marcado
 // var_dump($flatdb->db('example')->table('default')->select('who')->where(['who' => '$not par'])->execute());//selecionar e retornar marcado
 // var_dump($flatdb->db('example')->table('default')->select()->where(['who' => '$regex ~^s.*$~'])->execute());//selecionar com regex in where() 
 // var_dump($flatdb->db('example')->table('default')->select()->where(['unid' => '$if >16'])->execute());//selecionar com regex in where() 
@@ -83,7 +86,7 @@ var_dump($flatdb->db('example')->table('default')->select(['group.a','group.b'])
 
 // var_dump($flatdb->db('example')->table('default')->delete(15)->execute());//delete ids
 // var_dump($flatdb->db('example')->table('default')->delete([10,8])->execute());//delete ids
-// var_dump($flatdb->db('example')->table('default')->delete()->where(['who'=>'other', 'number'=>50])->execute());//delete com condicao
+var_dump($flatdb->db('example')->table('default')->delete()->where(['who'=>'other'])->execute());//delete com condicao
 
 
 // var_dump($flatdb->db('example')->table('default')->length());//total de arquivos salvos

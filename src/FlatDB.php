@@ -31,7 +31,7 @@ class FlatDB
 	 * var responsabel pelas info do db
 	 * @var array
 	 */
-	private $db = [];
+	private $db = ['instantiated' => null];
 
 	
 	/**
@@ -61,6 +61,8 @@ class FlatDB
 		'data' => null,
 		'meta' => null
 	];
+
+
 	/**
 	 * Prefixo do cache
 	 * @var string
@@ -192,7 +194,7 @@ class FlatDB
 	 * @param  bool $create TRUE: cria a tabela caso não exista | Create case does not exist
 	 * @return this
 	 */
-	public function table($name, $create=false)
+	public function table($name, $create = false)
 	{
 		if (!$this->db['instantiated']) throw new Exception('Nao ha database para consulta!');
 
@@ -324,12 +326,13 @@ class FlatDB
 	 * @param  bool $valueMerge TRUE Mesclar valor caso exista um valor na chave (ira converte em array, caso seja uma string o valor existente)
 	 * @return this
 	 */
-	public function put($newContent, $valueMerge=false)
+	public function add($newContent, $valueMerge=false)
 	{
 		$newContent = $this->lowerCase($newContent);
 		$this->prepareSet('put', $newContent, null, null, $valueMerge); //nesse caso sera salvo o conteudo a ser adicionado em 'data'
 		return $this;
 	}
+
 	public function remove($keys)
 	{
 		

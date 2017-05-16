@@ -428,7 +428,10 @@ class DotNotationArrayAccess
 	 */
 	public static function returnPartString($string, $start = 0)
 	{
-		return trim(substr($string, $start));
+		$content = trim(substr($string, $start));
+		// var_dump($content);//debug
+		if($content === '') throw new ArrayAccessException("Nenhum valor para comparacao!");
+		return $content;
 	}
 
 
@@ -543,7 +546,7 @@ class DotNotationArrayAccess
 	 * @param bool $alsoTheKey TRUE executa a funcao também na chaves. FALSE executa apenas no valor
 	 * @return array
 	 */
-	private static function arrayMapRecursive($callback, array $array, $alsoTheKey=false)
+	public static function arrayMapRecursive($callback, array $array, $alsoTheKey=false)
 	{
 		$callback = (array)$callback; //force to array
 		$result = [];

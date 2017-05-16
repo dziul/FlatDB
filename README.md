@@ -84,7 +84,7 @@ Sintaxe a ser seguida: **(instância)->(banco de dados)->(tabela)->(ação)->(ex
 
 ## Instância:
 
-#### new FlatDB($dirInit [, $create = false])
+### `new FlatDB($dirInit [, $create = false])`
 | $fdb = new FlatDB($dirInit, $create);
 
 * **$dirInit** (string): precisa começar sem e terminar com `/`. Exemplo: `data/`. Se não for declarada nenhum valor, será considerado o caminho padrão da `class FlatDB`.

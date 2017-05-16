@@ -77,7 +77,6 @@ composer require "darkziul/flatdb"
 > Fatal Error: Nao ha tabela para consulta!
 
 
----
 
 ### `new FlatDB($dirInit [, $create = false])`
 | $fdb = new FlatDB($dirInit, $create);

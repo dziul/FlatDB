@@ -62,20 +62,17 @@ composer require "darkziul/flatdb"
 
 ## Iniciando
 
-FlatDB usa-se **Encadeamento de métodos**, exemplo:
+>FlatDB usa-se **Encadeamento de métodos**, exemplo:
 
-`$fdb->db('test')->table('product')->select('name')->where(['type' => 'tv'])->execute();`
+>`$fdb->db('test')->table('product')->select('name')->where(['type' => 'tv'])->execute();`
 
+> Sintaxe a ser seguida: **(instância)->(banco de dados)->(tabela)->(ação)->(executar/gerar)** | $instance->db->table->...->execute()
 
-Sintaxe a ser seguida: **(instância)->(banco de dados)->(tabela)->(ação)->(executar/gerar)**
-| $instance->db->table->...->execute()
-
-
-* modo errado: **(instância)->(tabela)->(ação)->(executar/gerar)** 
+> * modo errado: **(instância)->(tabela)->(ação)->(executar/gerar)** 
 
 >  Fatal Error: Nao ha database para consulta!
 
-* modo errado: **(instância)->(banco de dados)->(ação)->(executar/gerar)** 
+> * modo errado: **(instância)->(banco de dados)->(ação)->(executar/gerar)** 
 
 > Fatal Error: Nao ha tabela para consulta!
 

@@ -80,7 +80,7 @@ Sintaxe a ser seguida: **(instância)->(banco de dados)->(tabela)->(ação)->(ex
 > Fatal Error: Nao ha tabela para consulta!
 
 
-
+---
 
 ### `new FlatDB($dirInit [, $create = false])`
 | $fdb = new FlatDB($dirInit, $create);
